@@ -1,23 +1,74 @@
+lappend ::auto_path [file dirname [zvfs::list */Img-win64/pkgIndex.tcl]]
+
 package require Tk
 package require Img
 
-proc showWindow {} {
-    set gameName {{Golden Axe III} {Diablo}}
+proc prepareGamesList {} {
+
+    #С божьей помощью надеемся что список у нас всегда от 0 и дальше
+    #И порядок добавления соответствует индексу иначе всё поломается 
+
+    dict set games 0 name "Golden Axe III"
+    dict set games 0 cover "cover.jpg"
+    dict set games 1 name "Diablo"
+    dict set games 1 cover "cover2.jpg"
+
+    return $games
+}
+
+proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
+    #С божьей помощью надеемся что список у нас всегда от 0 и дальше
+    #И порядок добавления соответствует индексу иначе всё поломается 
+    set dictIdOrderChecksum 0
+    dict for {id game} $games {
+        if {$id != $dictIdOrderChecksum} {
+            error "Dictionary doesn't have right order! $id != $dictIdOrderChecksum"
+        }
+        set dictIdOrderChecksum [expr {$dictIdOrderChecksum + 1}]
+    }
+}
+
+proc showWindow { games } {
+
+    assertGamesIdOrderedAndWithoutEmptySpace $games
 
     listbox .lb
-    .lb insert end {*}$gameName
 
-    bind .lb <<ListboxSelect>> {ListSelectionChanged %W}
+    dict for {id game} $games {
+        dict with game {
+            .lb insert end $name
+        }
+    }
+
+    bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
 
     canvas .c
 
     grid .lb .c -sticky ew
+
+    proc ListSelectionChanged {listbox games} {
+
+        set index [$listbox curselection]
+
+        #Проверить что картинка существует
+        if {[dict exists $games $index cover] eq 0} {
+            error "Link to cover not exists!"
+        }
+
+        # Загрузить картинку зная что выбранно
+        set coverFilename [dict get $games $index cover]
+
+        #Проверить что файл с таким именем существует
+
+        set img [image create photo -file $coverFilename ]
+
+        # Сделать картинку по размеру окна
+        
+        # Вывести картинку
+        .c create image 0 0 -anchor nw -image $img
+    }
 }
 
-proc ListSelectionChanged {listbox} {
-    set img {cover.jpg}
-    set pimg [image create photo -file $img -format jpeg ]
-}
 # Взять список новых для кэша
 
     # Загрузить список возможных вариантов
