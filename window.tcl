@@ -53,6 +53,16 @@ proc showWindow { games } {
 
         set index [$listbox curselection]
 
+        #Проверить что это новое пополнение
+        if {[dict exists $games $index preliminary] eq 1} {
+            #Вывести окно с названиями и картинками для выбора настоящего
+            set preliminary [dict get $games $index preliminary]
+            puts $preliminary
+            foreach x $preliminary {
+                puts [dict get $x name]
+            }
+        }
+
         #Проверить что картинка существует
         if {[dict exists $games $index cover] eq 0} {
             error "Link to cover not exists!"
