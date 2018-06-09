@@ -1,4 +1,6 @@
+source cache.tcl
 source window.tcl
+source netgamesdb.tcl
 
 # Проверить есть ли прошлый вариант
 
@@ -19,7 +21,7 @@ source window.tcl
         # предложить выбрать другой файл
     
 # Прочитать кэш
-    
+    set cache [prepareGamesList]
     # Кэш пустой
     # Создать
         # Кэш не удаётся создать
@@ -42,6 +44,9 @@ source window.tcl
 
 # Взять список новых для кэша
 
+    console show
+    set cacheWithUploads [uploadFromCache $cache]
+    puts $cacheWithUploads
     # Загрузить список возможных вариантов
         # Загрузка не получилась вывести что нет свзяи с инетом или БД
     # Данные не совпадают с форматом
@@ -56,7 +61,7 @@ source window.tcl
         # Подгрузить каждый вариант с доп инфой и кавером и сохранить в кэш эти
         # данные
 
-showWindow [prepareGamesList]
+    showWindow $cache
 
 # Вывести окно со списком и вариантами подстановки
     # Прочитать кэш

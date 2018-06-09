@@ -3,19 +3,6 @@ lappend ::auto_path [file dirname [zvfs::list */Img-win64/pkgIndex.tcl]]
 package require Tk
 package require Img
 
-proc prepareGamesList {} {
-
-    #С божьей помощью надеемся что список у нас всегда от 0 и дальше
-    #И порядок добавления соответствует индексу иначе всё поломается 
-
-    dict set games 0 name "Golden Axe III"
-    dict set games 0 cover "cover.jpg"
-    dict set games 1 name "Diablo"
-    dict set games 1 cover "cover2.jpg"
-
-    return $games
-}
-
 proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
     #С божьей помощью надеемся что список у нас всегда от 0 и дальше
     #И порядок добавления соответствует индексу иначе всё поломается 
@@ -26,6 +13,22 @@ proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
         }
         set dictIdOrderChecksum [expr {$dictIdOrderChecksum + 1}]
     }
+}
+
+
+proc scaleImage {im xfactor {yfactor 0}} {
+    set mode -subsample
+    if {abs($xfactor) < 1} {
+        set xfactor [expr round(1./$xfactor)]
+    } elseif {$xfactor>=0 && $yfactor>=0} {
+        set mode -zoom
+    }
+    if {$yfactor == 0} {set yfactor $xfactor}
+    set t [image create photo]
+    $t copy $im
+    $im blank
+    $im copy $t -shrink $mode $xfactor $yfactor
+    image delete $t
 }
 
 proc showWindow { games } {
@@ -42,9 +45,9 @@ proc showWindow { games } {
 
     bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
 
-    canvas .c
+    canvas .coverCanvas
 
-    grid .lb .c -sticky ew
+    grid .lb .coverCanvas -sticky ew
 
     proc ListSelectionChanged {listbox games} {
 
@@ -60,12 +63,13 @@ proc showWindow { games } {
 
         #Проверить что файл с таким именем существует
 
-        set img [image create photo -file $coverFilename ]
+        set img [image create photo -file $coverFilename]
 
         # Сделать картинку по размеру окна
+        scaleImage $img 0.2
         
         # Вывести картинку
-        .c create image 0 0 -anchor nw -image $img
+        .coverCanvas create image 0 0 -anchor nw -image $img
     }
 }
 
