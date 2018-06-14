@@ -57,10 +57,8 @@ proc showWindow { games } {
         if {[dict exists $games $index preliminary] eq 1} {
             #Вывести окно с названиями и картинками для выбора настоящего
             set preliminary [dict get $games $index preliminary]
-            puts $preliminary
-            foreach x $preliminary {
-                puts [dict get $x name]
-            }
+            showSubWindow $preliminary
+            return 
         }
 
         #Проверить что картинка существует
@@ -80,6 +78,70 @@ proc showWindow { games } {
         
         # Вывести картинку
         .coverCanvas create image 0 0 -anchor nw -image $img
+    }
+}
+
+proc showSubWindow { preliminary } {
+
+    toplevel .subwindow0
+
+    listbox .subwindow0.lb1
+
+    foreach x $preliminary {
+        .subwindow0.lb1 insert end [dict get $x name]
+    }
+
+    canvas .subwindow0.coverCanvas1
+
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1  -sticky ew
+
+    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $preliminary]
+
+    proc SubListSelectionChanged {listbox preliminary} {
+
+        #Очищать картинку если её нет
+        #Выгружать картинки побольше
+        #Сохранять картинку и игру
+
+        set index [$listbox curselection]
+
+        set preliminaryEntry [lindex $preliminary $index]
+
+        if {[dict exists $preliminaryEntry cover] eq 0} {
+            return
+        }
+
+        set coverEntry [dict get $preliminaryEntry cover]
+
+        if {[dict exists $coverEntry url] eq 0} {
+            return
+        }
+
+        set coverURL [dict get $coverEntry url]
+
+        set pattern {[^\/]*\.[a-z]{3,4}$}
+
+        regexp $pattern $coverURL coverFilename
+
+        if {![file exists $coverFilename]} {
+            puts $coverFilename
+
+            set f [open $coverFilename wb]
+            set tok [http::geturl "http:$coverURL" -channel $f -binary 1]
+            close $f
+
+            if {[http::status $tok] eq "ok" && [http::ncode $tok] == 200} {
+                puts "Downloaded successfully http:$coverURL"
+            }
+            http::cleanup $tok
+        } else {
+
+            set img [image create photo -file $coverFilename]
+            
+            # Вывести картинку
+            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img
+
+        }
     }
 }
 

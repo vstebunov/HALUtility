@@ -46,7 +46,6 @@ source netgamesdb.tcl
 
     console show
     set cacheWithUploads [uploadFromCache $cache]
-    puts $cacheWithUploads
     # Загрузить список возможных вариантов
         # Загрузка не получилась вывести что нет свзяи с инетом или БД
     # Данные не совпадают с форматом
