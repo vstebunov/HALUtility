@@ -56,8 +56,7 @@ proc showWindow { games } {
         #Проверить что это новое пополнение
         if {[dict exists $games $index preliminary] eq 1} {
             #Вывести окно с названиями и картинками для выбора настоящего
-            set preliminary [dict get $games $index preliminary]
-            showSubWindow $preliminary
+            showSubWindow $games $index
             return 
         }
 
@@ -81,7 +80,9 @@ proc showWindow { games } {
     }
 }
 
-proc showSubWindow { preliminary } {
+proc showSubWindow { games index } {
+
+    set preliminary [dict get $games $index preliminary]
 
     toplevel .subwindow0
 
@@ -93,7 +94,11 @@ proc showSubWindow { preliminary } {
 
     canvas .subwindow0.coverCanvas1
 
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1  -sticky ew
+    windowState::setState 1
+
+    button .subwindow0.saveButton -text "Save" -command savePreliminary
+
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1  .subwindow0.saveButton -sticky ews
 
     bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $preliminary]
 
@@ -142,6 +147,12 @@ proc showSubWindow { preliminary } {
             .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img
 
         }
+    }
+
+    proc savePreliminary {} {
+        puts [windowState::getState]
+
+        destroy .subwindow0
     }
 }
 

@@ -16,3 +16,16 @@ proc prepareGamesList {} {
 
     return $games
 }
+
+namespace eval windowState {
+    variable xy 0
+    proc setState {x} {
+        variable xy $x
+        puts "setState $x"
+    }
+    proc getState {} {
+        variable xy
+        puts $xy
+    }
+}
+
