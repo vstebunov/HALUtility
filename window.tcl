@@ -31,19 +31,12 @@ proc scaleImage {im xfactor {yfactor 0}} {
     image delete $t
 }
 
-proc showWindow { games } {
+proc showWindow {games} {
 
     assertGamesIdOrderedAndWithoutEmptySpace $games
 
     listbox .lb
 
-    dict for {id game} $games {
-        dict with game {
-            .lb insert end $name
-        }
-    }
-
-    bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
 
     canvas .coverCanvas
 
@@ -74,10 +67,28 @@ proc showWindow { games } {
 
         # Сделать картинку по размеру окна
         scaleImage $img 0.2
+
+        #Стереть старую картинку
+        .coverCanvas delete cover
         
         # Вывести картинку
-        .coverCanvas create image 0 0 -anchor nw -image $img
+        .coverCanvas create image 0 0 -anchor nw -image $img -tags cover
     }
+
+    proc refreshMainWindow {games} {
+
+        .lb delete 0 [.lb size]
+
+        dict for {id game} $games {
+            dict with game {
+                .lb insert end $name
+            }
+        }
+
+        bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
+    }
+
+    refreshMainWindow $games
 }
 
 proc showSubWindow { games index } {
@@ -94,39 +105,23 @@ proc showSubWindow { games index } {
 
     canvas .subwindow0.coverCanvas1
 
-    windowState::setState 1
-
-    button .subwindow0.saveButton -text "Save" -command savePreliminary
+    button .subwindow0.saveButton -text "Save" -command "savePreliminary .subwindow0.lb1 $index"
 
     grid .subwindow0.lb1 .subwindow0.coverCanvas1  .subwindow0.saveButton -sticky ews
 
-    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $preliminary]
+    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $index $preliminary]
 
-    proc SubListSelectionChanged {listbox preliminary} {
+    proc SubListSelectionChanged {listbox gameIndex preliminary} {
 
         #Очищать картинку если её нет
+        .subwindow0.coverCanvas1 delete cover
+
         #Выгружать картинки побольше
         #Сохранять картинку и игру
 
         set index [$listbox curselection]
 
-        set preliminaryEntry [lindex $preliminary $index]
-
-        if {[dict exists $preliminaryEntry cover] eq 0} {
-            return
-        }
-
-        set coverEntry [dict get $preliminaryEntry cover]
-
-        if {[dict exists $coverEntry url] eq 0} {
-            return
-        }
-
-        set coverURL [dict get $coverEntry url]
-
-        set pattern {[^\/]*\.[a-z]{3,4}$}
-
-        regexp $pattern $coverURL coverFilename
+        set coverFilename [cache::preliminaryGetCoverFilename $gameIndex $index]
 
         if {![file exists $coverFilename]} {
             puts $coverFilename
@@ -144,16 +139,21 @@ proc showSubWindow { games index } {
             set img [image create photo -file $coverFilename]
             
             # Вывести картинку
-            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img
+            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
 
         }
     }
 
-    proc savePreliminary {} {
-        puts [windowState::getState]
+    proc savePreliminary {listbox gameIndex} {
+        set preliminaryIndex [$listbox curselection]
+
+        cache::preliminaryToEntity $preliminaryIndex $gameIndex
+
+        refreshMainWindow [cache::get]
 
         destroy .subwindow0
     }
+
 }
 
 # Взять список новых для кэша

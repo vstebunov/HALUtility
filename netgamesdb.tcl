@@ -17,15 +17,11 @@ proc uploadFromCache { cache } {
 
             set preliminary [networkGetPreliminaryByName $name]
 
-            dict update cache $gameID updateGame {
-                dict set updateGame uploaded 1
-                dict set updateGame preliminary $preliminary
-            }
-
+            cache::setPreliminaryToEntity $preliminary $gameID 
         }
     }
 
-    return $cache
+    return [cache::get]
 }
 
 proc networkGetPreliminaryByName { name } {

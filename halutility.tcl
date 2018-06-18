@@ -21,7 +21,7 @@ source netgamesdb.tcl
         # предложить выбрать другой файл
     
 # Прочитать кэш
-    set cache [prepareGamesList]
+    set cache [cache::prepareGamesList]
     # Кэш пустой
     # Создать
         # Кэш не удаётся создать
