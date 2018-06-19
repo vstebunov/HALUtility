@@ -19,6 +19,8 @@ namespace eval cache {
         dict set games 0 uploaded 1
         dict set games 1 name "Diablo"
         dict set games 1 uploaded 0
+        dict set games 2 name "Earthworm%20Jim"
+        dict set games 2 uploaded 0
 
         return $games
     }

@@ -9,3 +9,4 @@ They could now:
 + Download search from igdb 
 + Download screenshot from igdb
 + Download different size of image
++ Resize image to canvas and show it on right aligment

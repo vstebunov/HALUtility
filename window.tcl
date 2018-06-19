@@ -119,6 +119,7 @@ proc showSubWindow { games index } {
 
         #Очищать картинку если её нет
         .subwindow0.coverCanvas1 delete cover
+        .subwindow0.coverCanvas1 delete screenshots
 
         #Выгружать картинки побольше
         #Сохранять картинку и игру
@@ -142,6 +143,21 @@ proc showSubWindow { games index } {
                 uploadImage $filename $URL "720p"
             } else {
                 set simg [image create photo -file $filename]
+
+                set ih [image height $simg]
+                set iw [image width $simg]
+
+                set cw [winfo width .subwindow0.coverCanvas1]
+                set ch [winfo height .subwindow0.coverCanvas1]
+
+                set scaleY [expr double($ch) / $ih]
+                set scaleX [expr double($cw) / $iw]
+
+                if {$scaleX ne 0 && $scaleY ne 0} {
+                    #scaleImage $simg $scaleX $scaleY
+                    scaleImage $simg $scaleX
+                }
+
                 .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
             }
         }
