@@ -106,8 +106,12 @@ proc showSubWindow { games index } {
     canvas .subwindow0.coverCanvas1
 
     button .subwindow0.saveButton -text "Save" -command "savePreliminary .subwindow0.lb1 $index"
+    button .subwindow0.lastCover -text "<< Cover" -command "changeCover"
+    button .subwindow0.nextCover -text ">>" -command "changeCover"
+    button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
+    button .subwindow0.nextBackground -text ">>" -command "changeBackground"
 
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1  .subwindow0.saveButton -sticky ews
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastCover .subwindow0.nextCover .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
 
     bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $index $preliminary]
 
@@ -128,8 +132,6 @@ proc showSubWindow { games index } {
             uploadImage $coverFilename $coverURL "cover_big"
         } else {
             set img [image create photo -file $coverFilename]
-            # Вывести картинку
-            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
         }
 
         set screenshots [cache::preliminaryGetScreenshotsFilename $gameIndex $index]
@@ -143,6 +145,11 @@ proc showSubWindow { games index } {
                 .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
             }
         }
+
+        if {[info exists img] eq 1} {
+            # Вывести картинку
+            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
+        }
     }
 
     proc savePreliminary {listbox gameIndex} {
@@ -153,6 +160,12 @@ proc showSubWindow { games index } {
         refreshMainWindow [cache::get]
 
         destroy .subwindow0
+    }
+
+    proc changeBackground {} {
+    }
+
+    proc changeCover {} {
     }
 
 }
