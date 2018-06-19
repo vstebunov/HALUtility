@@ -36,6 +36,10 @@ namespace eval cache {
     }
 
     proc preliminaryGetCoverFilename {gameIndex preliminaryIndex} {
+        return [URLToFilename [preliminaryGetCoverURL $gameIndex $preliminaryIndex]]
+    }
+
+    proc preliminaryGetCoverURL {gameIndex preliminaryIndex} {
         variable games
 
         set game [dict get $games $gameIndex]
@@ -51,13 +55,29 @@ namespace eval cache {
             return
         }
 
-        set coverURL [dict get $coverEntry url]
+        return [dict get $coverEntry url]
+    }
 
-        set pattern {[^\/]*\.[a-z]{3,4}$}
+    proc preliminaryGetScreenshotsFilename {gameIndex preliminaryIndex} {
+        variable games
 
-        regexp $pattern $coverURL coverFilename
+        set game [dict get $games $gameIndex]
+        set preliminaryEntry [lindex [dict get $game preliminary] $preliminaryIndex]
 
-        return $coverFilename
+        if {[dict exists $preliminaryEntry screenshots] eq 0} {
+            return
+        }
+
+        set screenshotsEntry [dict get $preliminaryEntry screenshots]
+
+        foreach s $screenshotsEntry {
+            if {[dict exists $s url] eq 0} {
+                continue
+            }
+            lappend screenshots [dict get $s url]
+        }
+
+        return $screenshots
     }
 
     proc setPreliminaryToEntity {preliminary gameIndex} {

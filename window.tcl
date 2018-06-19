@@ -121,26 +121,27 @@ proc showSubWindow { games index } {
 
         set index [$listbox curselection]
 
+        set coverURL [cache::preliminaryGetCoverURL $gameIndex $index]
         set coverFilename [cache::preliminaryGetCoverFilename $gameIndex $index]
 
-        if {![file exists $coverFilename]} {
-            puts $coverFilename
-
-            set f [open $coverFilename wb]
-            set tok [http::geturl "http:$coverURL" -channel $f -binary 1]
-            close $f
-
-            if {[http::status $tok] eq "ok" && [http::ncode $tok] == 200} {
-                puts "Downloaded successfully http:$coverURL"
-            }
-            http::cleanup $tok
+        if {$coverFilename ne "" && ![file exists $coverFilename]} {
+            uploadImage $coverFilename $coverURL "cover_big"
         } else {
-
             set img [image create photo -file $coverFilename]
-            
             # Вывести картинку
             .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
+        }
 
+        set screenshots [cache::preliminaryGetScreenshotsFilename $gameIndex $index]
+
+        foreach URL $screenshots {
+            set filename [URLToFilename $URL]
+            if {$filename ne "" && ![file exists $filename]} {
+                uploadImage $filename $URL "720p"
+            } else {
+                set simg [image create photo -file $filename]
+                .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
+            }
         }
     }
 
