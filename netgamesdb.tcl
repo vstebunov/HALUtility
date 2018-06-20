@@ -51,6 +51,8 @@ proc uploadImage {filename URL {size ""}} {
 proc networkGetPreliminaryByName { name } {
     global userkey
 
+    set name [string map [list " " "%20"] $name]
+
     set urlSearchByName "http://api-endpoint.igdb.com/games/?search=$name&fields=id,name,cover,screenshots&limit=50"
 
     set token [http::geturl $urlSearchByName -headers "user-key $userkey" ]

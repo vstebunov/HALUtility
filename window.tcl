@@ -16,7 +16,7 @@ proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
 }
 
 
-proc scaleImage {im xfactor {yfactor 0}} {
+proc scaleImage {im xfactor {yfactor 0.0}} {
     set mode -subsample
     if {abs($xfactor) < 1} {
         set xfactor [expr round(1./$xfactor)]
