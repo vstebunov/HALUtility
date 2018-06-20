@@ -96,5 +96,29 @@ namespace eval cache {
         return $games
     }
 
+    proc save {} {
+        variable games
+        set f [open "cache.dic" wb]
+        puts $f $games
+        close $f
+    }
+
+    proc read {} {
+        variable games
+        if {[file exists "cache.dic"]} {
+            set f [open "cache.dic" r]
+            gets $f games
+            close $f
+            return $games
+        } else {
+            # Кэш пустой
+            # Создать
+                # Кэш не удаётся создать
+                # Вывести сообщение что работа программы не возможна из-за невозможности
+                # записи фалов.
+            return [cache::prepareGamesList]
+        }
+    }
+
 }
 

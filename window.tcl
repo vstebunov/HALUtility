@@ -37,10 +37,11 @@ proc showWindow {games} {
 
     listbox .lb
 
-
     canvas .coverCanvas
 
     grid .lb .coverCanvas -sticky ew
+
+    bind . <Destroy> closeWindow
 
     proc ListSelectionChanged {listbox games} {
 
@@ -86,6 +87,10 @@ proc showWindow {games} {
         }
 
         bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
+    }
+
+    proc closeWindow {} {
+        cache::save
     }
 
     refreshMainWindow $games

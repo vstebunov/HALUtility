@@ -10,3 +10,4 @@ They could now:
 + Download screenshot from igdb
 + Download different size of image
 + Resize image to canvas and show it on right aligment
++ Read and save games to cache
