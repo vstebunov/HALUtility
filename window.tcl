@@ -59,10 +59,12 @@ proc showWindow {games} {
             error "Link to cover not exists!"
         }
 
-        # Загрузить картинку зная что выбранно
         set coverFilename [dict get $games $index cover]
 
+        # Загрузить картинку зная что выбранно
         #Проверить что файл с таким именем существует
+
+        set coverFilename cache_img/$coverFilename
 
         set img [image create photo -file $coverFilename]
 
@@ -132,7 +134,7 @@ proc showSubWindow { games index } {
         set index [$listbox curselection]
 
         set coverURL [cache::preliminaryGetCoverURL $gameIndex $index]
-        set coverFilename [cache::preliminaryGetCoverFilename $gameIndex $index]
+        set coverFilename cache_img/[cache::preliminaryGetCoverFilename $gameIndex $index]
 
         if {$coverFilename ne "" && ![file exists $coverFilename]} {
             uploadImage $coverFilename $coverURL "cover_big"
@@ -143,7 +145,7 @@ proc showSubWindow { games index } {
         set screenshots [cache::preliminaryGetScreenshotsFilename $gameIndex $index]
 
         foreach URL $screenshots {
-            set filename [URLToFilename $URL]
+            set filename cache_img/[URLToFilename $URL]
             if {$filename ne "" && ![file exists $filename]} {
                 uploadImage $filename $URL "720p"
             } else {

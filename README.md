@@ -13,3 +13,5 @@ They could now:
 + Read and save games to cache
 + Sanitize name before make call to server
 + Read predefined XML
++ Save cache img to different directory
++ Read cover and background from XML

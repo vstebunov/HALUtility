@@ -11,6 +11,7 @@ namespace eval cache {
         #
         #name
         #cover
+        #background
         #uploaded
         #preliminary
 
@@ -126,41 +127,31 @@ namespace eval cache {
 
         variable games
 
-        set cachedGames ""
+        set existInCache 0
+        dict for {xid XMLGame} $listGame {
+            set XMLName [dict get $XMLGame name]
+            puts $XMLName
 
-        dict for {id game} $games {
-            dict with game {
-                lappend cachedGames $name 
-            }
-        }
-
-        set existInXML 0
-        foreach cachedName $cachedGames {
-            foreach XMLName $listGame {
-                if {$XMLName eq $cachedName} {
-                    set existInXML 1
-                    break
+            dict for {cid cachedGame} $games {
+                set cachedName [dict get $cachedGame name]
+                puts $cachedName
+                if {$cachedName eq $XMLName} {
+                    set existInCache 1
                 }
             }
 
-            if {$existInXML eq 0} {
-                #remove from dict and cache
-                set listGame [lsearch -all -inline -not -exact $listGame $cachedName]
-                continue
+            puts $existInCache
+
+            if {$existInCache eq 0} {
+                set k [dict size $games]
+                puts $k
+                puts $XMLGame
+                dict append games $k $XMLGame
             }
 
         }
 
-        foreach XMLName $listGame {
-            #add to cache
-            set k [dict size $games]
-
-            puts $k
-            puts $XMLName
-
-            dict set games $k name $XMLName
-            dict set games $k uploaded 0
-        }
+        puts $games
 
     }
 

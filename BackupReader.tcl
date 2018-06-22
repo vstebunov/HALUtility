@@ -15,18 +15,22 @@ namespace eval backup {
         close $f
 
         set root [$doc documentElement]
+        set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
 
-        set xpath {//net.i.akihiro.halauncher.data.AppItem/title/text()}
-
-        set game_name {}
-
-        foreach test [$root selectNode $xpath] {
-            #puts [$test nodeName]
-            lappend game_name [$test nodeValue]
+        set i 0
+        foreach test [$root selectNode $xpath2] {
+            dict set xmlGames $i name [[$test selectNodes {title/text()}] nodeValue]
+            dict set xmlGames $i uploaded 1
+            if {[$test selectNodes {bgImageUrl/text()}] ne ""} {
+                dict set xmlGames $i background [[$test selectNodes {bgImageUrl/text()}] nodeValue]
+            }
+            if {[$test selectNodes {cardImageUrl/text()}] ne ""} {
+                dict set xmlGames $i cover [[$test selectNodes {cardImageUrl/text()}] nodeValue]
+            }
+            incr i
         }
 
-        set li [lsort -dictionary -unique $game_name]
-        return $li
+        return $xmlGames
     }
 
 }
