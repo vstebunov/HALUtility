@@ -120,5 +120,49 @@ namespace eval cache {
         }
     }
 
+    proc update {listGame} {
+
+        cache::read
+
+        variable games
+
+        set cachedGames ""
+
+        dict for {id game} $games {
+            dict with game {
+                lappend cachedGames $name 
+            }
+        }
+
+        set existInXML 0
+        foreach cachedName $cachedGames {
+            foreach XMLName $listGame {
+                if {$XMLName eq $cachedName} {
+                    set existInXML 1
+                    break
+                }
+            }
+
+            if {$existInXML eq 0} {
+                #remove from dict and cache
+                set listGame [lsearch -all -inline -not -exact $listGame $cachedName]
+                continue
+            }
+
+        }
+
+        foreach XMLName $listGame {
+            #add to cache
+            set k [dict size $games]
+
+            puts $k
+            puts $XMLName
+
+            dict set games $k name $XMLName
+            dict set games $k uploaded 0
+        }
+
+    }
+
 }
 

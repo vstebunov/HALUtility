@@ -1,18 +1,26 @@
 source cache.tcl
 source window.tcl
 source netgamesdb.tcl
+source initiator.tcl
+source BackupReader.tcl
 
 # Проверить есть ли прошлый вариант
+set config [initiator::read]
 
     # Проверить рабочий ли прошлый вариант
 
     # Найти файл если прошлый вариант не рабочий
+    if {$config eq 0} {
+
+    }
 
     # Файл не найден и прошлого варианта нет. 
         # Вывести сообщение 
         # предложить загрузить любой файл
 
 # Прочитать файл
+    console show
+    set li [backup::readXML]
 
     # Файл пустой
     # Файл не читается
@@ -21,8 +29,9 @@ source netgamesdb.tcl
         # предложить выбрать другой файл
     
 # Прочитать кэш
-    set cache [cache::read]
+    cache::update $li
 
+    set cache [cache::get]
     #Кэш не совпадает с настоящим файлом
         #Добавить в кэш новые записи 
         #Пометить их как новые
@@ -39,7 +48,6 @@ source netgamesdb.tcl
 
 # Взять список новых для кэша
 
-    console show
     set cacheWithUploads [uploadFromCache $cache]
     # Загрузить список возможных вариантов
         # Загрузка не получилась вывести что нет свзяи с инетом или БД

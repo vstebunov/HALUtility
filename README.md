@@ -12,3 +12,4 @@ They could now:
 + Resize image to canvas and show it on right aligment
 + Read and save games to cache
 + Sanitize name before make call to server
++ Read predefined XML
