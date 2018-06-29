@@ -29,7 +29,7 @@ set config [initiator::read]
         # предложить выбрать другой файл
     
 # Прочитать кэш
-    cache::update $li
+    #cache::update $li
 
     set cache [cache::get]
     #Кэш не совпадает с настоящим файлом
@@ -63,7 +63,7 @@ set config [initiator::read]
         # Подгрузить каждый вариант с доп инфой и кавером и сохранить в кэш эти
         # данные
 
-    showWindow $cacheWithUploads
+    showWindow $li
 
 # Вывести окно со списком и вариантами подстановки
     # Прочитать кэш
