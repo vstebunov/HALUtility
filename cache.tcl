@@ -128,31 +128,19 @@ namespace eval cache {
         variable games
 
         set existInCache 0
-        dict for {xid XMLGame} $listGame {
-            set XMLName [dict get $XMLGame name]
-            puts $XMLName
-
-            dict for {cid cachedGame} $games {
-                set cachedName [dict get $cachedGame name]
-                puts $cachedName
-                if {$cachedName eq $XMLName} {
-                    set existInCache 1
+            dict for {xid XMLGame} $listGame {
+                set XMLName [dict get $XMLGame name]
+                dict for {cid cachedGame} $games {
+                    set cachedName [dict get $cachedGame name]
+                    if {$cachedName eq $XMLName} {
+                        set existInCache 1
+                    }
+                }
+                if {$existInCache eq 0} {
+                    set k [dict size $games]
+                    dict append games $k $XMLGame
                 }
             }
-
-            puts $existInCache
-
-            if {$existInCache eq 0} {
-                set k [dict size $games]
-                puts $k
-                puts $XMLGame
-                dict append games $k $XMLGame
-            }
-
-        }
-
-        puts $games
-
     }
 
 }

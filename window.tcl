@@ -54,6 +54,11 @@ proc showWindow {games} {
             return 
         }
 
+        if {[dict exists $games $index background] eq 1} {
+            set backgroundFilename [dict get $games $index background]
+            drawBackground $backgroundFilename
+        }
+
         #Проверить что картинка существует
         if {[dict exists $games $index cover] eq 0} {
             error "Link to cover not exists!"
@@ -61,15 +66,57 @@ proc showWindow {games} {
 
         set coverFilename [dict get $games $index cover]
 
-        # Загрузить картинку зная что выбранно
-        #Проверить что файл с таким именем существует
+        drawCover $coverFilename
+    }
 
-        set coverFilename cache_img/$coverFilename
+    proc drawBackground {backgroundFilename} {
+        # Загрузить картинку зная что выбранно
+        # Проверить что файл с таким именем существует
+
+        if {[string match "file:/data/user/0/net.i.akihiro.halauncher/*" $backgroundFilename]} {
+            set backgroundFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $backgroundFilename]
+        } elseif {[string match "android.resource:*" $backgroundFilename]} {
+
+            .coverCanvas delete background
+            .coverCanvas create image 0 0 -anchor nw -tags background
+
+            return
+        } else {
+            set backgroundFilename cache_img/$backgroundFilename
+        }
+
+        set img [image create photo -file $backgroundFilename]
+
+        # Сделать картинку по размеру окна
+        #scaleImage $img 0.2
+
+        #Стереть старую картинку
+        .coverCanvas delete background
+        
+        # Вывести картинку
+        .coverCanvas create image 0 0 -anchor nw -image $img -tags background
+    }
+
+    proc drawCover {coverFilename} {
+        # Загрузить картинку зная что выбранно
+        # Проверить что файл с таким именем существует
+
+        if {[string match "file:/data/user/0/net.i.akihiro.halauncher/*" $coverFilename]} {
+            set coverFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $coverFilename]
+        } elseif {[string match "android.resource:*" $coverFilename]} {
+
+            .coverCanvas delete cover
+            .coverCanvas create image 0 0 -anchor nw -tags cover
+
+            return
+        } else {
+            set coverFilename cache_img/$coverFilename
+        }
 
         set img [image create photo -file $coverFilename]
 
         # Сделать картинку по размеру окна
-        scaleImage $img 0.2
+        #scaleImage $img 0.2
 
         #Стереть старую картинку
         .coverCanvas delete cover

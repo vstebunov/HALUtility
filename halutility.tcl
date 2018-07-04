@@ -4,6 +4,7 @@ source netgamesdb.tcl
 source initiator.tcl
 source BackupReader.tcl
 
+console show
 # Проверить есть ли прошлый вариант
 set config [initiator::read]
 
@@ -19,8 +20,7 @@ set config [initiator::read]
         # предложить загрузить любой файл
 
 # Прочитать файл
-    console show
-    set li [backup::readXML]
+    set XMLList [backup::readXML]
 
     # Файл пустой
     # Файл не читается
@@ -31,7 +31,7 @@ set config [initiator::read]
 # Прочитать кэш
     #cache::update $li
 
-    set cache [cache::get]
+    #set cache [cache::get]
     #Кэш не совпадает с настоящим файлом
         #Добавить в кэш новые записи 
         #Пометить их как новые
@@ -48,7 +48,7 @@ set config [initiator::read]
 
 # Взять список новых для кэша
 
-    set cacheWithUploads [uploadFromCache $cache]
+    #set cacheWithUploads [uploadFromCache $cache]
     # Загрузить список возможных вариантов
         # Загрузка не получилась вывести что нет свзяи с инетом или БД
     # Данные не совпадают с форматом
@@ -63,7 +63,7 @@ set config [initiator::read]
         # Подгрузить каждый вариант с доп инфой и кавером и сохранить в кэш эти
         # данные
 
-    showWindow $li
+    showWindow $XMLList
 
 # Вывести окно со списком и вариантами подстановки
     # Прочитать кэш

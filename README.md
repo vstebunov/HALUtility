@@ -15,3 +15,5 @@ They could now:
 + Read predefined XML
 + Save cache img to different directory
 + Read cover and background from XML
++ Show cover and background on window
++ Remove unused cache call

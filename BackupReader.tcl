@@ -19,6 +19,7 @@ namespace eval backup {
 
         set i 0
         foreach test [$root selectNode $xpath2] {
+            dict set xmlGames $i id $i
             dict set xmlGames $i name [[$test selectNodes {title/text()}] nodeValue]
             dict set xmlGames $i uploaded 1
             if {[$test selectNodes {bgImageUrl/text()}] ne ""} {
