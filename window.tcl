@@ -39,11 +39,17 @@ proc showWindow {games} {
 
     canvas .coverCanvas
 
-    grid .lb .coverCanvas -sticky ew
+    button .editButton -text "Edit" -command {
+        puts $games
+    }
+
+    grid .lb .editButton .coverCanvas -sticky ew
 
     bind . <Destroy> closeWindow
 
     proc ListSelectionChanged {listbox games} {
+
+        variable index
 
         set index [$listbox curselection]
 
@@ -57,6 +63,8 @@ proc showWindow {games} {
         if {[dict exists $games $index background] eq 1} {
             set backgroundFilename [dict get $games $index background]
             drawBackground $backgroundFilename
+        } else {
+            .coverCanvas delete background
         }
 
         #Проверить что картинка существует
@@ -77,8 +85,8 @@ proc showWindow {games} {
             set backgroundFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $backgroundFilename]
         } elseif {[string match "android.resource:*" $backgroundFilename]} {
 
+            puts "test"
             .coverCanvas delete background
-            .coverCanvas create image 0 0 -anchor nw -tags background
 
             return
         } else {
@@ -88,7 +96,9 @@ proc showWindow {games} {
         set img [image create photo -file $backgroundFilename]
 
         # Сделать картинку по размеру окна
-        #scaleImage $img 0.2
+
+        set scale [getScale $img .coverCanvas]
+        scaleImage $img $scale
 
         #Стереть старую картинку
         .coverCanvas delete background
@@ -106,7 +116,6 @@ proc showWindow {games} {
         } elseif {[string match "android.resource:*" $coverFilename]} {
 
             .coverCanvas delete cover
-            .coverCanvas create image 0 0 -anchor nw -tags cover
 
             return
         } else {
@@ -116,13 +125,17 @@ proc showWindow {games} {
         set img [image create photo -file $coverFilename]
 
         # Сделать картинку по размеру окна
-        #scaleImage $img 0.2
+        set scale [getScale $img .coverCanvas]
+        scaleImage $img [expr $scale * 0.3]
 
         #Стереть старую картинку
         .coverCanvas delete cover
         
+
+        set x [expr [winfo width .coverCanvas] / 2]
+        set y [expr [winfo height .coverCanvas] / 2]
         # Вывести картинку
-        .coverCanvas create image 0 0 -anchor nw -image $img -tags cover
+        .coverCanvas create image $x $y -image $img -tags cover
     }
 
     proc refreshMainWindow {games} {
@@ -140,6 +153,12 @@ proc showWindow {games} {
 
     proc closeWindow {} {
         cache::save
+    }
+
+    proc showEditWindow {games} {
+        variable index
+        puts [info vars]
+        showSubWindow $games $index
     }
 
     refreshMainWindow $games
@@ -198,17 +217,8 @@ proc showSubWindow { games index } {
             } else {
                 set simg [image create photo -file $filename]
 
-                set ih [image height $simg]
-                set iw [image width $simg]
-
-                set cw [winfo width .subwindow0.coverCanvas1]
-                set ch [winfo height .subwindow0.coverCanvas1]
-
-                set scaleY [expr double($ch) / $ih]
-                set scaleX [expr double($cw) / $iw]
-
-                if {$scaleX ne 0 && $scaleY ne 0} {
-                    #scaleImage $simg $scaleX $scaleY
+                set $scaleX [getScale $simg .subwindow0.coverCanvas1]
+                if {$scaleX ne 0} {
                     scaleImage $simg $scaleX
                 }
 
@@ -239,6 +249,20 @@ proc showSubWindow { games index } {
     }
 
 }
+
+proc getScale {simg cover} {
+    set ih [image height $simg]
+    set iw [image width $simg]
+
+    set cw [winfo width $cover]
+    set ch [winfo height $cover]
+
+    set scaleY [expr double($ch) / $ih]
+    set scaleX [expr double($cw) / $iw]
+
+    return $scaleX
+}
+
 
 # Взять список новых для кэша
 

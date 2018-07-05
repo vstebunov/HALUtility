@@ -17,3 +17,6 @@ They could now:
 + Read cover and background from XML
 + Show cover and background on window
 + Remove unused cache call
++ Show cover and background with ratio
++ Show cover on center
++ Add Edit button
