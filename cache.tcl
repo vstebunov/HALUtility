@@ -1,6 +1,7 @@
 namespace eval cache {
 
     variable games
+    variable request
 
     proc prepareGamesList {} {
 
@@ -17,6 +18,7 @@ namespace eval cache {
 
         dict set games 0 name "Golden Axe III"
         dict set games 0 cover "cover.jpg"
+        dict set games 0 background "cover.jpg"
         dict set games 0 uploaded 1
         dict set games 1 name "Diablo"
         dict set games 1 uploaded 0
@@ -24,6 +26,11 @@ namespace eval cache {
         dict set games 2 uploaded 0
 
         return $games
+    }
+
+    proc prepareRequestList {} {
+        variable request
+        dict set request "Golden Axe III" preliminary {}
     }
 
     proc preliminaryToEntity {preliminaryIndex gameIndex} {
@@ -44,20 +51,15 @@ namespace eval cache {
 
     proc preliminaryGetCoverURL {gameIndex preliminaryIndex} {
         variable games
-
         set game [dict get $games $gameIndex]
         set preliminaryEntry [lindex [dict get $game preliminary] $preliminaryIndex]
-
         if {[dict exists $preliminaryEntry cover] eq 0} {
             return
         }
-
         set coverEntry [dict get $preliminaryEntry cover]
-
         if {[dict exists $coverEntry url] eq 0} {
             return
         }
-
         return [dict get $coverEntry url]
     }
 
@@ -85,7 +87,6 @@ namespace eval cache {
 
     proc setPreliminaryToEntity {preliminary gameIndex} {
         variable games
-
         dict update games $gameIndex updateGame {
             dict set updateGame uploaded 1
             dict set updateGame preliminary $preliminary
@@ -112,36 +113,8 @@ namespace eval cache {
             close $f
             return $games
         } else {
-            # Кэш пустой
-            # Создать
-                # Кэш не удаётся создать
-                # Вывести сообщение что работа программы не возможна из-за невозможности
-                # записи фалов.
             return [cache::prepareGamesList]
         }
     }
-
-    proc update {listGame} {
-
-        cache::read
-
-        variable games
-
-        set existInCache 0
-            dict for {xid XMLGame} $listGame {
-                set XMLName [dict get $XMLGame name]
-                dict for {cid cachedGame} $games {
-                    set cachedName [dict get $cachedGame name]
-                    if {$cachedName eq $XMLName} {
-                        set existInCache 1
-                    }
-                }
-                if {$existInCache eq 0} {
-                    set k [dict size $games]
-                    dict append games $k $XMLGame
-                }
-            }
-    }
-
 }
 

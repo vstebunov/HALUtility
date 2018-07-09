@@ -31,7 +31,7 @@ set config [initiator::read]
 # Прочитать кэш
     #cache::update $li
 
-    #set cache [cache::get]
+    cache::read
     #Кэш не совпадает с настоящим файлом
         #Добавить в кэш новые записи 
         #Пометить их как новые

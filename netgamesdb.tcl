@@ -4,23 +4,17 @@ package require json
 source config.tcl
 
 proc uploadFromCache { cache } {
-
     #Как то показывать что идёт загрузка
-
     ::http::config -urlencoding
-
     dict for {gameID game} $cache {
         dict with game {
             if {$uploaded eq 1} {
                 continue
             }
-
             set preliminary [networkGetPreliminaryByName $name]
-
             cache::setPreliminaryToEntity $preliminary $gameID 
         }
     }
-
     return [cache::get]
 }
 

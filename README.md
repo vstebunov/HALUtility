@@ -20,3 +20,4 @@ They could now:
 + Show cover and background with ratio
 + Show cover on center
 + Add Edit button
++ Download screenshots after Edit clicked
