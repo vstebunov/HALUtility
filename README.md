@@ -21,3 +21,4 @@ They could now:
 + Show cover on center
 + Add Edit button
 + Download screenshots after Edit clicked
++ Show scaled image without error

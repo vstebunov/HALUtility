@@ -22,6 +22,7 @@ proc scaleImage {im xfactor {yfactor 0.0}} {
         set xfactor [expr round(1./$xfactor)]
     } elseif {$xfactor>=0 && $yfactor>=0} {
         set mode -zoom
+        set xfactor [expr round($xfactor)]
     }
     if {$yfactor == 0} {set yfactor $xfactor}
     set t [image create photo]
@@ -149,18 +150,20 @@ proc showSubWindow { game index } {
             }
         }
 
-        set coverURL [dict get [dict get $game cover] url]
-        if {$coverURL ne ""} {
-            set coverFilename cache_img/[URLToFilename $coverURL]
-            if {![file exists $coverFilename]} {
-                uploadImage $coverFilename $coverURL "cover_big"
-            } 
-            set img [image create photo -file $coverFilename]
-            set scaleX [getScale $img .subwindow0.coverCanvas1]
-            if {$scaleX ne 0} {
-                scaleImage $img $scaleX
+        if {[dict exists $game cover] ne 0} {
+            set coverURL [dict get [dict get $game cover] url]
+            if {$coverURL ne ""} {
+                set coverFilename cache_img/[URLToFilename $coverURL]
+                if {![file exists $coverFilename]} {
+                    uploadImage $coverFilename $coverURL "cover_big"
+                } 
+                set img [image create photo -file $coverFilename]
+                set scaleX [getScale $img .subwindow0.coverCanvas1]
+                if {$scaleX ne 0} {
+                    scaleImage $img $scaleX
+                }
+                .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
             }
-            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
         }
     }
 
