@@ -22,3 +22,4 @@ They could now:
 + Add Edit button
 + Download screenshots after Edit clicked
 + Show scaled image without error
++ Save changed name to XML

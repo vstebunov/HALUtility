@@ -109,7 +109,6 @@ proc showWindow {games} {
 }
 
 proc showSubWindow { game index } {
-
     set name [dict get $game name]
     set preliminary [networkGetPreliminaryByName $name]
     toplevel .subwindow0
@@ -118,14 +117,14 @@ proc showSubWindow { game index } {
         .subwindow0.lb1 insert end [dict get $x name]
     }
     canvas .subwindow0.coverCanvas1
-    button .subwindow0.saveButton -text "Save" -command "savePreliminary .subwindow0.lb1 $index"
+    button .subwindow0.saveButton -text "Save"
     button .subwindow0.lastCover -text "<< Cover" -command "changeCover"
     button .subwindow0.nextCover -text ">>" -command "changeCover"
     button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
     button .subwindow0.nextBackground -text ">>" -command "changeBackground"
     grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastCover .subwindow0.nextCover .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
-    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $index $preliminary]
-    proc SubListSelectionChanged {listbox gameIndex preliminary} {
+    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
+    proc SubListSelectionChanged {listbox name preliminary} {
         .subwindow0.coverCanvas1 delete cover
         .subwindow0.coverCanvas1 delete screenshots
         set index [$listbox curselection]
@@ -165,12 +164,13 @@ proc showSubWindow { game index } {
                 .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
             }
         }
+
+        .subwindow0.saveButton configure -command "savePreliminary {$name} {$game}"
     }
 
-    proc savePreliminary {listbox gameIndex} {
-        set preliminaryIndex [$listbox curselection]
-        cache::preliminaryToEntity $preliminaryIndex $gameIndex
-        refreshMainWindow [cache::get]
+    proc savePreliminary {name game} {
+        backup::saveToXMLByName $name $game
+        #refreshMainWindow [cache::get]
         destroy .subwindow0
     }
 

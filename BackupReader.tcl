@@ -34,5 +34,28 @@ namespace eval backup {
         return $xmlGames
     }
 
+    proc saveToXMLByName {name game} {
+        set filename "Backup_HAL/_serialized_AppList.dat.xml"
+        #Read
+        set f [open $filename]
+        set doc [dom parse [read $f]]
+        close $f
+        #Search
+        set root [$doc documentElement]
+        set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
+
+        foreach test [$root selectNode $xpath2] {
+            foreach node [$test selectNodes title/text()[format {[contains(., "%s")]} $name]] {
+                #Set
+                $node nodeValue [dict get $game name]
+            }
+        }
+        #Save
+        set changed [$doc asXML]
+        set fileId [open $filename "w"]
+        puts -nonewline $fileId $changed
+        close $fileId
+    }
+
 }
 
