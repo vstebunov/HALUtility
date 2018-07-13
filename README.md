@@ -23,3 +23,4 @@ They could now:
 + Download screenshots after Edit clicked
 + Show scaled image without error
 + Save changed name to XML
++ Save changed cover to XML and copy to backup
