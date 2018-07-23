@@ -1,5 +1,3 @@
-lappend ::auto_path [file dirname [zvfs::list */tdom/pkgIndex.tcl]]
-
 package require tdom
 
 namespace eval backup {

@@ -1,3 +1,4 @@
+source include.tcl
 source cache.tcl
 source window.tcl
 source netgamesdb.tcl

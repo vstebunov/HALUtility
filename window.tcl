@@ -1,5 +1,3 @@
-lappend ::auto_path [file dirname [zvfs::list */Img-win64/pkgIndex.tcl]]
-
 package require Tk
 package require Img
 
@@ -49,7 +47,7 @@ proc showWindow {games} {
             .coverCanvas delete background
         }
         if {[dict exists $games $index cover] eq 0} {
-            error "Link to cover not exists!"
+            #error "Link to cover not exists!"
         }
         set coverFilename [dict get $games $index cover]
         drawCover $coverFilename
