@@ -5,7 +5,6 @@ source netgamesdb.tcl
 source initiator.tcl
 source BackupReader.tcl
 
-console show
 # Проверить есть ли прошлый вариант
 set config [initiator::read]
 

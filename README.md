@@ -24,3 +24,5 @@ They could now:
 + Show scaled image without error
 + Save changed name to XML
 + Save changed cover to XML and copy to backup
++ Run on Ubuntu (with simple edition)
++ Run on Ubuntu (as is)
