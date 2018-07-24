@@ -32,3 +32,4 @@ They could now:
 + Load cover first
 + Clear old cover
 + Show loaded cover and background for current game
++ Don't show error on Ubuntu when start subwindow

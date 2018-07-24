@@ -40,6 +40,9 @@ proc showWindow {games} {
 
     proc ListSelectionChanged {listbox games} {
         set index [$listbox curselection]
+        if {![dict exists $games $index]} {
+            return
+        }
         if {[dict exists $games $index background] eq 1} {
             set backgroundFilename [dict get $games $index background]
             drawBackground $backgroundFilename
@@ -135,8 +138,8 @@ proc showSubWindow { game index } {
 
         proc uploadImageHandler {filename imageIndex canvas tag} {
             set idx [.subwindow0.lb1 curselection]
-            puts "$idx $imageIndex {$idx ne $imageIndex}"
             if {$idx ne $imageIndex} {
+                puts "$idx $imageIndex {$idx ne $imageIndex}"
                 return
             }
             set img [image create photo -file $filename]
