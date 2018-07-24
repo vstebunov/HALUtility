@@ -1,5 +1,4 @@
 source include.tcl
-source cache.tcl
 source window.tcl
 source netgamesdb.tcl
 source initiator.tcl
@@ -31,7 +30,6 @@ set config [initiator::read]
 # Прочитать кэш
     #cache::update $li
 
-    cache::read
     #Кэш не совпадает с настоящим файлом
         #Добавить в кэш новые записи 
         #Пометить их как новые
@@ -48,7 +46,6 @@ set config [initiator::read]
 
 # Взять список новых для кэша
 
-    #set cacheWithUploads [uploadFromCache $cache]
     # Загрузить список возможных вариантов
         # Загрузка не получилась вывести что нет свзяи с инетом или БД
     # Данные не совпадают с форматом

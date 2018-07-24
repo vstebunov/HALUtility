@@ -46,11 +46,10 @@ proc showWindow {games} {
         } else {
             .coverCanvas delete background
         }
-        if {[dict exists $games $index cover] eq 0} {
-            #error "Link to cover not exists!"
-        }
+        if {[dict exists $games $index cover]} {
         set coverFilename [dict get $games $index cover]
         drawCover $coverFilename
+        }
         set game [dict get $games $index]
         .editButton configure -command "showSubWindow {$game} $index"
     }
@@ -72,6 +71,8 @@ proc showWindow {games} {
     }
 
     proc drawCover {coverFilename} {
+        .coverCanvas delete cover
+
         if {[string match "file:/data/user/0/net.i.akihiro.halauncher/*" $coverFilename]} {
             set coverFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $coverFilename]
         } elseif {[string match "android.resource:*" $coverFilename]} {
@@ -80,10 +81,14 @@ proc showWindow {games} {
         } else {
             set coverFilename cache_img/$coverFilename
         }
+
+        if {![file exists $coverFilename] || [file isdirectory $coverFilename]} {
+            return
+        }
+
         set img [image create photo -file $coverFilename]
         set scale [getScale $img .coverCanvas]
         scaleImage $img [expr $scale * 0.3]
-        .coverCanvas delete cover
         set x [expr [winfo width .coverCanvas] / 2]
         set y [expr [winfo height .coverCanvas] / 2]
         .coverCanvas create image $x $y -image $img -tags cover
@@ -100,7 +105,6 @@ proc showWindow {games} {
     }
 
     proc closeWindow {} {
-        cache::save
     }
 
     refreshMainWindow $games
@@ -122,11 +126,42 @@ proc showSubWindow { game index } {
     button .subwindow0.nextBackground -text ">>" -command "changeBackground"
     grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastCover .subwindow0.nextCover .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
     bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
+
     proc SubListSelectionChanged {listbox name preliminary} {
         .subwindow0.coverCanvas1 delete cover
         .subwindow0.coverCanvas1 delete screenshots
         set index [$listbox curselection]
         set game [lindex $preliminary $index]
+
+        proc uploadImageHandler {filename imageIndex canvas tag} {
+            set idx [.subwindow0.lb1 curselection]
+            puts "$idx $imageIndex {$idx ne $imageIndex}"
+            if {$idx ne $imageIndex} {
+                return
+            }
+            set img [image create photo -file $filename]
+            set scaleX [getScale $img $canvas]
+            if {$scaleX ne 0} {
+                scaleImage $img $scaleX
+            }
+            $canvas create image 0 0 -anchor nw -image $img -tags $tag
+        }
+
+        if {[dict exists $game cover] ne 0} {
+            set coverURL [dict get [dict get $game cover] url]
+            if {$coverURL ne ""} {
+                set coverFilename cache_img/[URLToFilename $coverURL]
+                if {[file exists $coverFilename]} {
+                    set img [image create photo -file $coverFilename]
+                    set scaleX [getScale $img .subwindow0.coverCanvas1]
+                    if {$scaleX ne 0} {
+                        scaleImage $img $scaleX
+                    }
+                } else {
+                    uploadImage $coverFilename $coverURL "cover_big" $index .subwindow0.coverCanvas1 cover uploadImageHandler
+                }
+            }
+        }
 
         if {[dict exists $game screenshots] ne 0} {
             set screenshots [dict get $game screenshots]
@@ -134,33 +169,25 @@ proc showSubWindow { game index } {
                 set realURL [dict get $URL url]
                 if {$realURL ne ""} {
                     set filename cache_img/[URLToFilename $realURL]
-                    if {![file exists $filename]} {
-                        uploadImage $filename $realURL "720p"
-                    } 
-                    set simg [image create photo -file $filename]
-                    set scaleX [getScale $simg .subwindow0.coverCanvas1]
-                    if {$scaleX ne 0} {
-                        scaleImage $simg $scaleX
+                    if {[file exists $filename]} {
+                        set simg [image create photo -file $filename]
+                        set scaleX [getScale $simg .subwindow0.coverCanvas1]
+                        if {$scaleX ne 0} {
+                            scaleImage $simg $scaleX
+                        }
+                    } else {
+                        uploadImage $filename $realURL "720p" $index .subwindow0.coverCanvas1 screenshots uploadImageHandler
                     }
-                    .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
                 }
             }
         }
 
-        if {[dict exists $game cover] ne 0} {
-            set coverURL [dict get [dict get $game cover] url]
-            if {$coverURL ne ""} {
-                set coverFilename cache_img/[URLToFilename $coverURL]
-                if {![file exists $coverFilename]} {
-                    uploadImage $coverFilename $coverURL "cover_big"
-                } 
-                set img [image create photo -file $coverFilename]
-                set scaleX [getScale $img .subwindow0.coverCanvas1]
-                if {$scaleX ne 0} {
-                    scaleImage $img $scaleX
-                }
-                .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
-            }
+        if {[info exists simg]} {
+            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
+        }
+
+        if {[info exists img]} {
+            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
         }
 
         .subwindow0.saveButton configure -command "savePreliminary {$name} {$game}"
@@ -168,7 +195,7 @@ proc showSubWindow { game index } {
 
     proc savePreliminary {name game} {
         backup::saveToXMLByName $name $game
-        #refreshMainWindow [cache::get]
+        #refreshMainWindow 
         destroy .subwindow0
     }
 

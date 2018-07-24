@@ -3,22 +3,7 @@ package require json
 
 source config.tcl
 
-proc uploadFromCache { cache } {
-    #Как то показывать что идёт загрузка
-    ::http::config -urlencoding
-    dict for {gameID game} $cache {
-        dict with game {
-            if {$uploaded eq 1} {
-                continue
-            }
-            set preliminary [networkGetPreliminaryByName $name]
-            cache::setPreliminaryToEntity $preliminary $gameID 
-        }
-    }
-    return [cache::get]
-}
-
-proc uploadImage {filename URL {size ""}} {
+proc uploadImage {filename URL {size ""} index canvas tag handler} {
     puts $filename
 
     if {$size ne ""} {
@@ -39,6 +24,7 @@ proc uploadImage {filename URL {size ""}} {
         return 0
     }
     http::cleanup $tok
+    $handler $filename $index $canvas $tag
     return 1
 }
 

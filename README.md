@@ -26,3 +26,9 @@ They could now:
 + Save changed cover to XML and copy to backup
 + Run on Ubuntu (with simple edition)
 + Run on Ubuntu (as is)
++ Run on Windows
++ File cache.dic don't created
++ Don't show error when cover not exists
++ Load cover first
++ Clear old cover
++ Show loaded cover and background for current game
