@@ -32,3 +32,5 @@ They could now:
 + Load cover first
 + Clear old cover
 + Show loaded cover and background for current game
++ Add current view as first element on subwindow
++ User could rename game and search it in preliminary

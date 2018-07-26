@@ -47,8 +47,8 @@ proc showWindow {games} {
             .coverCanvas delete background
         }
         if {[dict exists $games $index cover]} {
-        set coverFilename [dict get $games $index cover]
-        drawCover $coverFilename
+            set coverFilename [dict get $games $index cover]
+            drawCover $coverFilename
         }
         set game [dict get $games $index]
         .editButton configure -command "showSubWindow {$game} $index"
@@ -111,31 +111,47 @@ proc showWindow {games} {
 }
 
 proc showSubWindow { game index } {
+    global name
+    global currentEditableGame
+    global currentEditableName
+
+    set currentEditableGame $game
+
     set name [dict get $game name]
+    set currentEditableName $name
+
     set preliminary [networkGetPreliminaryByName $name]
+    set preliminary [linsert $preliminary 0 $game]
     toplevel .subwindow0
+
+    entry .subwindow0.currentName -textvariable name 
+    bind .subwindow0.currentName <Return> {recallNetworkDB $name $currentEditableGame}
+
     listbox .subwindow0.lb1
+    canvas .subwindow0.coverCanvas1
+    button .subwindow0.saveButton -text "Save"
+    button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
+    button .subwindow0.nextBackground -text ">>" -command "changeBackground"
+    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
+
+    grid .subwindow0.currentName
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
+
     foreach x $preliminary {
         .subwindow0.lb1 insert end [dict get $x name]
     }
-    canvas .subwindow0.coverCanvas1
-    button .subwindow0.saveButton -text "Save"
-    button .subwindow0.lastCover -text "<< Cover" -command "changeCover"
-    button .subwindow0.nextCover -text ">>" -command "changeCover"
-    button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
-    button .subwindow0.nextBackground -text ">>" -command "changeBackground"
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastCover .subwindow0.nextCover .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
-    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
 
     proc SubListSelectionChanged {listbox name preliminary} {
+        global currentEditableName
+
         .subwindow0.coverCanvas1 delete cover
         .subwindow0.coverCanvas1 delete screenshots
         set index [$listbox curselection]
         set game [lindex $preliminary $index]
+        puts "$index $game"
 
         proc uploadImageHandler {filename imageIndex canvas tag} {
             set idx [.subwindow0.lb1 curselection]
-            puts "$idx $imageIndex {$idx ne $imageIndex}"
             if {$idx ne $imageIndex} {
                 return
             }
@@ -148,17 +164,19 @@ proc showSubWindow { game index } {
         }
 
         if {[dict exists $game cover] ne 0} {
-            set coverURL [dict get [dict get $game cover] url]
-            if {$coverURL ne ""} {
-                set coverFilename cache_img/[URLToFilename $coverURL]
-                if {[file exists $coverFilename]} {
-                    set img [image create photo -file $coverFilename]
-                    set scaleX [getScale $img .subwindow0.coverCanvas1]
-                    if {$scaleX ne 0} {
-                        scaleImage $img $scaleX
+            if {[dict exists [dict get $game cover] url] ne 0} {
+                set coverURL [dict get [dict get $game cover] url]
+                if {$coverURL ne ""} {
+                    set coverFilename cache_img/[URLToFilename $coverURL]
+                    if {[file exists $coverFilename]} {
+                        set img [image create photo -file $coverFilename]
+                        set scaleX [getScale $img .subwindow0.coverCanvas1]
+                        if {$scaleX ne 0} {
+                            scaleImage $img $scaleX
+                        }
+                    } else {
+                        uploadImage $coverFilename $coverURL "cover_big" $index .subwindow0.coverCanvas1 cover uploadImageHandler
                     }
-                } else {
-                    uploadImage $coverFilename $coverURL "cover_big" $index .subwindow0.coverCanvas1 cover uploadImageHandler
                 }
             }
         }
@@ -190,7 +208,7 @@ proc showSubWindow { game index } {
             .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
         }
 
-        .subwindow0.saveButton configure -command "savePreliminary {$name} {$game}"
+        .subwindow0.saveButton configure -command "savePreliminary {$currentEditableName} {$game}"
     }
 
     proc savePreliminary {name game} {
@@ -202,7 +220,15 @@ proc showSubWindow { game index } {
     proc changeBackground {} {
     }
 
-    proc changeCover {} {
+    proc recallNetworkDB {name game} {
+        .subwindow0.lb1 delete 0 [expr [.subwindow0.lb1 size] - 1]
+
+        set preliminary [networkGetPreliminaryByName $name]
+        set preliminary [linsert $preliminary 0 $game]
+        foreach x $preliminary {
+            .subwindow0.lb1 insert end [dict get $x name]
+        }
+        bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
     }
 
 }

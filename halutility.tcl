@@ -1,22 +1,7 @@
 source include.tcl
 source window.tcl
 source netgamesdb.tcl
-source initiator.tcl
 source BackupReader.tcl
-
-# Проверить есть ли прошлый вариант
-set config [initiator::read]
-
-    # Проверить рабочий ли прошлый вариант
-
-    # Найти файл если прошлый вариант не рабочий
-    if {$config eq 0} {
-
-    }
-
-    # Файл не найден и прошлого варианта нет. 
-        # Вывести сообщение 
-        # предложить загрузить любой файл
 
 # Прочитать файл
     set XMLList [backup::readXML]
