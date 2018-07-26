@@ -40,6 +40,9 @@ proc showWindow {games} {
 
     proc ListSelectionChanged {listbox games} {
         set index [$listbox curselection]
+        if {![dict exists $games $index]} {
+            return
+        }
         if {[dict exists $games $index background] eq 1} {
             set backgroundFilename [dict get $games $index background]
             drawBackground $backgroundFilename
