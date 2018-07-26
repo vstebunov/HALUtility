@@ -65,3 +65,5 @@ They could now:
 + Don't show error on Ubuntu when start subwindow
 + Add current view as first element on subwindow
 + User could rename game and search it in preliminary
++ Don't load background and don't show it
++ Windows refresh name after save

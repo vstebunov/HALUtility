@@ -133,12 +133,12 @@ proc showSubWindow { game index } {
     listbox .subwindow0.lb1
     canvas .subwindow0.coverCanvas1
     button .subwindow0.saveButton -text "Save"
-    button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
-    button .subwindow0.nextBackground -text ">>" -command "changeBackground"
+    #button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
+    #button .subwindow0.nextBackground -text ">>" -command "changeBackground"
     bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
 
     grid .subwindow0.currentName
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.lastBackground .subwindow0.nextBackground .subwindow0.saveButton -sticky ews
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.saveButton -sticky ews
 
     foreach x $preliminary {
         .subwindow0.lb1 insert end [dict get $x name]
@@ -184,28 +184,28 @@ proc showSubWindow { game index } {
             }
         }
 
-        if {[dict exists $game screenshots] ne 0} {
-            set screenshots [dict get $game screenshots]
-            foreach URL $screenshots {
-                set realURL [dict get $URL url]
-                if {$realURL ne ""} {
-                    set filename cache_img/[URLToFilename $realURL]
-                    if {[file exists $filename]} {
-                        set simg [image create photo -file $filename]
-                        set scaleX [getScale $simg .subwindow0.coverCanvas1]
-                        if {$scaleX ne 0} {
-                            scaleImage $simg $scaleX
-                        }
-                    } else {
-                        uploadImage $filename $realURL "720p" $index .subwindow0.coverCanvas1 screenshots uploadImageHandler
-                    }
-                }
-            }
-        }
+#        if {[dict exists $game screenshots] ne 0} {
+#            set screenshots [dict get $game screenshots]
+#            foreach URL $screenshots {
+#                set realURL [dict get $URL url]
+#                if {$realURL ne ""} {
+#                    set filename cache_img/[URLToFilename $realURL]
+#                    if {[file exists $filename]} {
+#                        set simg [image create photo -file $filename]
+#                        set scaleX [getScale $simg .subwindow0.coverCanvas1]
+#                        if {$scaleX ne 0} {
+#                            scaleImage $simg $scaleX
+#                        }
+#                    } else {
+#                        uploadImage $filename $realURL "720p" $index .subwindow0.coverCanvas1 screenshots uploadImageHandler
+#                    }
+#                }
+#            }
+#        }
 
-        if {[info exists simg]} {
-            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
-        }
+        #if {[info exists simg]} {
+        #    .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
+        #}
 
         if {[info exists img]} {
             .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
@@ -216,7 +216,7 @@ proc showSubWindow { game index } {
 
     proc savePreliminary {name game} {
         backup::saveToXMLByName $name $game
-        #refreshMainWindow 
+        refreshMainWindow [backup::readXML]
         destroy .subwindow0
     }
 
