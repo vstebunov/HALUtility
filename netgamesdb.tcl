@@ -31,9 +31,11 @@ proc uploadImage {filename URL {size ""} index canvas tag handler} {
 proc networkGetPreliminaryByName { name } {
     global userkey
 
-    set name [string map [list " " "%20"] $name]
+    set name [string map [list " " "%20" "!" "%20" "\[" "%20" "\]" "%20"] $name]
 
     set urlSearchByName "http://api-endpoint.igdb.com/games/?search=$name&fields=id,name,cover,screenshots&limit=50"
+
+    puts $urlSearchByName
 
     set token [http::geturl $urlSearchByName -headers "user-key $userkey" ]
     set resp [http::data $token]

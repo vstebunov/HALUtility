@@ -32,10 +32,11 @@ proc scaleImage {im xfactor {yfactor 0.0}} {
 
 proc showWindow {games} {
     assertGamesIdOrderedAndWithoutEmptySpace $games
-    listbox .lb
+    listbox .lb -width 50
     canvas .coverCanvas
     button .editButton -text "Edit" 
-    grid .lb .editButton .coverCanvas -sticky ew
+    grid .lb .coverCanvas -sticky ew
+    grid .editButton
     bind . <Destroy> closeWindow
 
     proc ListSelectionChanged {listbox games} {
@@ -130,7 +131,7 @@ proc showSubWindow { game index } {
     entry .subwindow0.currentName -textvariable name 
     bind .subwindow0.currentName <Return> {recallNetworkDB $name $currentEditableGame}
 
-    listbox .subwindow0.lb1
+    listbox .subwindow0.lb1 -width 50
     canvas .subwindow0.coverCanvas1
     button .subwindow0.saveButton -text "Save"
     #button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
@@ -138,7 +139,8 @@ proc showSubWindow { game index } {
     bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
 
     grid .subwindow0.currentName
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1 .subwindow0.saveButton -sticky ews
+    grid .subwindow0.lb1 .subwindow0.coverCanvas1 -sticky ews
+    grid .subwindow0.saveButton
 
     foreach x $preliminary {
         .subwindow0.lb1 insert end [dict get $x name]

@@ -67,3 +67,5 @@ They could now:
 + User could rename game and search it in preliminary
 + Don't load background and don't show it
 + Windows refresh name after save
++ Load game contains special symbol in request
++ See long names
