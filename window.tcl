@@ -13,7 +13,6 @@ proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
     }
 }
 
-
 proc scaleImage {im xfactor {yfactor 0.0}} {
     set mode -subsample
     if {abs($xfactor) < 1} {
@@ -32,14 +31,31 @@ proc scaleImage {im xfactor {yfactor 0.0}} {
 
 proc showWindow {games} {
     assertGamesIdOrderedAndWithoutEmptySpace $games
-    listbox .lb -width 50
+
+    #configure window
+    wm title . "HAL Utility"
+
+    listbox .lb -width 50 -yscrollcommand ".yscroll set" 
+    scrollbar .yscroll -command ".lb yview" 
     canvas .coverCanvas
     button .editButton -text "Edit" 
-    grid .lb .coverCanvas -sticky ew
-    grid .editButton
+    entry .currentName -textvariable name 
+
+    listbox .lb1 -width 50 -yscrollcommand ".yscroll1 set"
+    scrollbar .yscroll1 -command ".lb1 yview" 
+    canvas .coverCanvas1
+    button .saveButton -text "Save"
+
+    grid .lb .yscroll .coverCanvas -sticky news -padx 1 -pady 1
+    grid .editButton  -sticky news -padx 1 -pady 1
+    grid .currentName -sticky news -padx 1 -pady 1
+    grid .lb1 .yscroll1 .coverCanvas1 -sticky news
+
     bind . <Destroy> closeWindow
 
     proc ListSelectionChanged {listbox games} {
+        global name 
+
         set index [$listbox curselection]
         if {![dict exists $games $index]} {
             return
@@ -56,6 +72,17 @@ proc showWindow {games} {
         }
         set game [dict get $games $index]
         .editButton configure -command "showSubWindow {$game} $index"
+
+        set name [dict get $games $index name]
+
+        .lb1 delete 0 [.lb1 size]
+
+        set preliminary [networkGetPreliminaryByName $name]
+
+        foreach x $preliminary {
+            .lb1 insert end [dict get $x name]
+        }
+
     }
 
     proc drawBackground {backgroundFilename} {

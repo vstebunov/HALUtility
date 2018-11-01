@@ -69,3 +69,4 @@ They could now:
 + Windows refresh name after save
 + Load game contains special symbol in request
 + See long names
++ Show loaded list on one window (without editing)
