@@ -70,3 +70,5 @@ They could now:
 + Load game contains special symbol in request
 + See long names
 + Show loaded list on one window (without editing)
++ Save on one window
++ Show indication of loading

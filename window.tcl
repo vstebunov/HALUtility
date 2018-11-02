@@ -30,30 +30,7 @@ proc scaleImage {im xfactor {yfactor 0.0}} {
 }
 
 proc showWindow {games} {
-    assertGamesIdOrderedAndWithoutEmptySpace $games
-
-    #configure window
-    wm title . "HAL Utility"
-
-    listbox .lb -width 50 -yscrollcommand ".yscroll set" 
-    scrollbar .yscroll -command ".lb yview" 
-    canvas .coverCanvas
-    button .editButton -text "Edit" 
-    entry .currentName -textvariable name 
-
-    listbox .lb1 -width 50 -yscrollcommand ".yscroll1 set"
-    scrollbar .yscroll1 -command ".lb1 yview" 
-    canvas .coverCanvas1
-    button .saveButton -text "Save"
-
-    grid .lb .yscroll .coverCanvas -sticky news -padx 1 -pady 1
-    grid .editButton  -sticky news -padx 1 -pady 1
-    grid .currentName -sticky news -padx 1 -pady 1
-    grid .lb1 .yscroll1 .coverCanvas1 -sticky news
-
-    bind . <Destroy> closeWindow
-
-    proc ListSelectionChanged {listbox games} {
+    proc listSelectionChanged {listbox games} {
         global name 
 
         set index [$listbox curselection]
@@ -82,6 +59,8 @@ proc showWindow {games} {
         foreach x $preliminary {
             .lb1 insert end [dict get $x name]
         }
+
+        bind .lb1 <<ListboxSelect>> [list subListSelectionChanged %W $name $preliminary]
 
     }
 
@@ -132,13 +111,96 @@ proc showWindow {games} {
                 .lb insert end $name
             }
         }
-        bind .lb <<ListboxSelect>> [list ListSelectionChanged %W $games]
+        bind .lb <<ListboxSelect>> [list listSelectionChanged %W $games]
     }
 
     proc closeWindow {} {
     }
 
+    proc savePreliminary {name game} {
+        backup::saveToXMLByName $name $game
+        refreshMainWindow [backup::readXML]
+        destroy .subwindow0
+    }
+
+    proc subListSelectionChanged {listbox name preliminary} {
+        global currentEditableName
+
+        .coverCanvas1 delete cover
+        .coverCanvas1 delete screenshots
+
+        .coverCanvas1 configure -background yellow
+
+        set index [$listbox curselection]
+        set game [lindex $preliminary $index]
+        puts "$index $game"
+
+        proc uploadImageHandler {filename imageIndex canvas tag} {
+            set idx [.lb1 curselection]
+            if {$idx ne $imageIndex} {
+                return
+            }
+            set img [image create photo -file $filename]
+            set scaleX [getScale $img $canvas]
+            if {$scaleX ne 0} {
+                scaleImage $img $scaleX
+            }
+            $canvas configure -background gray
+            $canvas create image 0 0 -anchor nw -image $img -tags $tag
+        }
+
+        if {[dict exists $game cover] ne 0} {
+            if {[dict exists [dict get $game cover] url] ne 0} {
+                set coverURL [dict get [dict get $game cover] url]
+                if {$coverURL ne ""} {
+                    set coverFilename cache_img/[URLToFilename $coverURL]
+                    if {[file exists $coverFilename]} {
+                        set img [image create photo -file $coverFilename]
+                        set scaleX [getScale $img .coverCanvas1]
+                        if {$scaleX ne 0} {
+                            scaleImage $img $scaleX
+                        }
+                    } else {
+                        .coverCanvas1 configure -background green
+                        uploadImage $coverFilename $coverURL "cover_big" $index .coverCanvas1 cover uploadImageHandler
+                    }
+                }
+            }
+        }
+
+        if {[info exists img]} {
+            .coverCanvas1 configure -background gray
+            .coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
+        }
+
+        .saveButton configure -command "savePreliminary {$name} {$game}"
+    }
+
+    assertGamesIdOrderedAndWithoutEmptySpace $games
+
+    #configure window
+    wm title . "HAL Utility"
+
+    listbox .lb -width 50 -yscrollcommand ".yscroll set" 
+    scrollbar .yscroll -command ".lb yview" 
+    canvas .coverCanvas
+    button .editButton -text "Edit" 
+    entry .currentName -textvariable name 
+
+    listbox .lb1 -width 50 -yscrollcommand ".yscroll1 set"
+    scrollbar .yscroll1 -command ".lb1 yview" 
+    canvas .coverCanvas1
+    button .saveButton -text "Save"
+
+    grid .lb .yscroll .coverCanvas -sticky news -padx 1 -pady 1
+    grid .editButton  - .saveButton  -sticky news -padx 1 -pady 1
+    grid .currentName -sticky news -padx 1 -pady 1
+    grid .lb1 .yscroll1 .coverCanvas1 -sticky news
+
+    bind . <Destroy> closeWindow
+
     refreshMainWindow $games
+
 }
 
 proc showSubWindow { game index } {
