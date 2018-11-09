@@ -2,8 +2,9 @@ package require tdom
 
 namespace eval backup {
 
-    variable li
-
+    # Internal: read a backup HAL XML and parse it to a dictionary
+    #
+    # Returns a dictionary with games
     proc readXML {} {
         set filename "Backup_HAL/_serialized_AppList.dat.xml"
 
@@ -32,6 +33,16 @@ namespace eval backup {
         return $xmlGames
     }
 
+    # Internal: save in a backup XML from dictionary
+    #
+    # name - string for finding entity in XML
+    # game - new entity with game
+    #
+    # Examples
+    #   saveToXMLByName "Tetris" {id 0 name Tetris}
+    #   # => saved to backup
+    #
+    # Returns nothing
     proc saveToXMLByName {name game} {
         set filename "Backup_HAL/_serialized_AppList.dat.xml"
         #Read
@@ -63,6 +74,15 @@ namespace eval backup {
         close $fileId
     }
 
+    # Internal: place an image in a directory with a backup XML
+    #
+    # image - dictionary entity with game image
+    #
+    # Examples
+    #   copyImageToBackup { url test.jpg }
+    #   # => true and copy to directory
+    #
+    # Returns true when an image in a directory and false when image not finded
     proc copyImageToBackup {image} {
         set coverURL [dict get $image url]
         set destCoverFilename [URLToFilename $coverURL]

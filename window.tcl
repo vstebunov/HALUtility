@@ -1,6 +1,16 @@
 package require Tk
 package require Img
 
+# Internal: Check a game list not contain empty space and start with zero
+#
+# games - Dictionary with games and ids
+#
+# Examples
+#
+#   assertGamesIdOrderedAndWithoutEmptySpace( { id 100 game "wrong" } )
+#   # => throw an error
+#
+# Returns nothing and throw error on wrong dictionary
 proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
     #С божьей помощью надеемся что список у нас всегда от 0 и дальше
     #И порядок добавления соответствует индексу иначе всё поломается 
@@ -13,6 +23,18 @@ proc assertGamesIdOrderedAndWithoutEmptySpace { games } {
     }
 }
 
+# Internal: Scale image by factor
+#
+# im - a image 
+# xfactor - a factor for scale by x
+# yfactor - a factor for scale by y default 0.0
+#
+# Examples
+#
+#   scaleImage $img 0.5
+#   #=> img changed
+#
+# Returns nothing but change an original image
 proc scaleImage {im xfactor {yfactor 0.0}} {
     set mode -subsample
     if {abs($xfactor) < 1} {
@@ -29,7 +51,72 @@ proc scaleImage {im xfactor {yfactor 0.0}} {
     image delete $t
 }
 
+# Internal: Get scale image by cover
+# 
+# simg - image
+# cover - element to cover by image
+#
+# Examples
+#   getScale $simg .window
+#   # => 0.5
+#
+# Returns a scale factor of image
+proc getScale {simg cover} {
+    set ih [image height $simg]
+    set iw [image width $simg]
+    set cw [winfo width $cover]
+    set ch [winfo height $cover]
+    set scaleY [expr double($ch) / $ih]
+    set scaleX [expr double($cw) / $iw]
+    return $scaleX
+}
+
+# Internal: make filename from URL
+#
+# URL - string with URL and filename
+#
+# Examples
+#   URLToFilename "http://test.com/1.jpg"
+#   # => 1.jpg
+#
+# Returns filename
+proc URLToFilename { URL } {
+    set pattern {[^\/]*\.[a-z]{3,4}$}
+    regexp $pattern $URL coverFilename
+    if {[info exists coverFilename] eq 0} {
+        puts "pattern wrong! $URL"
+        return ""
+    }
+    return $coverFilename
+}
+
+# Internal: show main window
+#
+# games - Dictionary with games from network
+#
+# Examples
+#   showWindow $games
+#   # show window with list of games
+#
+# Returns nothing
 proc showWindow {games} {
+
+    # Internal: handle selection of game in main list
+    #           show background
+    #           show cover
+    #           set handler for edit button
+    #           upload preliminary list from internet
+    #           show it on preliminary list listbox
+    #           set handler for listbox
+    #
+    # listbox - listbox element that handle
+    # games - Dictionary with games on store
+    #
+    # Examples
+    #   listSelectionChanged .lb $games
+    #   #make all from section
+    # 
+    # Returns nothing
     proc listSelectionChanged {listbox games} {
         global name 
 
@@ -64,9 +151,19 @@ proc showWindow {games} {
 
     }
 
+    # Internal: load image from net|cache and draw it on main cover canvas
+    #
+    # backgroundFilename - string in XML that contains background
+    #
+    # Examples
+    #   drawBackground $str
+    #   # => show background
+    #
+    # Returns nothing
     proc drawBackground {backgroundFilename} {
         if {[string match "file:/data/user/0/net.i.akihiro.halauncher/*" $backgroundFilename]} {
-            set backgroundFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $backgroundFilename]
+            set renameMap { "file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images" }
+            set backgroundFilename [string map $renameMap $backgroundFilename]
         } elseif {[string match "android.resource:*" $backgroundFilename]} {
             .coverCanvas delete background
             return
@@ -80,11 +177,21 @@ proc showWindow {games} {
         .coverCanvas create image 0 0 -anchor nw -image $img -tags background
     }
 
+    # Internal: load cover image and draw it on cover canvas
+    #
+    # coverFilename - strike in XML that contains covers
+    #
+    # Examples
+    #   drawCover $str
+    #   # => show cover
+    #
+    # Returns nothing
     proc drawCover {coverFilename} {
         .coverCanvas delete cover
 
         if {[string match "file:/data/user/0/net.i.akihiro.halauncher/*" $coverFilename]} {
-            set coverFilename [string map {"file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images"} $coverFilename]
+            set renameMap { "file:/data/user/0/net.i.akihiro.halauncher/files" "Backup_HAL/images" }
+            set coverFilename [string map $renameMap $coverFilename]
         } elseif {[string match "android.resource:*" $coverFilename]} {
             .coverCanvas delete cover
             return
@@ -104,6 +211,15 @@ proc showWindow {games} {
         .coverCanvas create image $x $y -image $img -tags cover
     }
 
+    # Internal: refresh main list by new Dictionary with games
+    #
+    # games - Dictionary with games
+    #
+    # Examples
+    #   refreshMainWindow { id 0 game "Tetris" }
+    #   # => set new list
+    #
+    # Returns nothing
     proc refreshMainWindow {games} {
         .lb delete 0 [.lb size]
         dict for {id game} $games {
@@ -114,15 +230,59 @@ proc showWindow {games} {
         bind .lb <<ListboxSelect>> [list listSelectionChanged %W $games]
     }
 
-    proc closeWindow {} {
-    }
-
+    # Internal: save a preliminary item to a main XML
+    #
+    # name - old name of game
+    # game - new entity for game
+    #
+    # Examples
+    #   savePreliminary "Sokoban" { name "Tetris" }
+    #   # => save to file and refresh window
+    #
+    # Returns nothing
     proc savePreliminary {name game} {
         backup::saveToXMLByName $name $game
         refreshMainWindow [backup::readXML]
-        destroy .subwindow0
     }
 
+    # Internal: handle uploaded images in preliminary cover
+    #
+    # filename - string from json with filename
+    # imageIndex - index of uploaded image
+    # canvas - canvase to draw image
+    # tag - image tag for delete and smth...
+    #
+    # Examples
+    #   set uploadImageHandler as part of uploadImage to work with it
+    #
+    # Returns nothing and set image in canvas after upload
+    proc uploadImageHandler {filename imageIndex canvas tag} {
+        set idx [.lb1 curselection]
+        if {$idx ne $imageIndex} {
+            return
+        }
+        set img [image create photo -file $filename]
+        set scaleX [getScale $img $canvas]
+        if {$scaleX ne 0} {
+            scaleImage $img $scaleX
+        }
+        $canvas configure -background gray
+        $canvas create image 0 0 -anchor nw -image $img -tags $tag
+    }
+
+    # Internal: handle selection of game in preliminary list
+    #           upload cover
+    #           set handler for save button
+    #
+    # listbox - listbox element that handle
+    # name - Current name of game in Dictionary
+    # preliminary - uploaded from network Dictionary of preliminary games
+    #
+    # Examples
+    #   subListSelectionChanged .lb1 "testris" {name "testris" cover "xxx.jpg"}
+    #   #make all from section
+    # 
+    # Returns nothing
     proc subListSelectionChanged {listbox name preliminary} {
         global currentEditableName
 
@@ -134,20 +294,6 @@ proc showWindow {games} {
         set index [$listbox curselection]
         set game [lindex $preliminary $index]
         puts "$index $game"
-
-        proc uploadImageHandler {filename imageIndex canvas tag} {
-            set idx [.lb1 curselection]
-            if {$idx ne $imageIndex} {
-                return
-            }
-            set img [image create photo -file $filename]
-            set scaleX [getScale $img $canvas]
-            if {$scaleX ne 0} {
-                scaleImage $img $scaleX
-            }
-            $canvas configure -background gray
-            $canvas create image 0 0 -anchor nw -image $img -tags $tag
-        }
 
         if {[dict exists $game cover] ne 0} {
             if {[dict exists [dict get $game cover] url] ne 0} {
@@ -178,7 +324,6 @@ proc showWindow {games} {
 
     assertGamesIdOrderedAndWithoutEmptySpace $games
 
-    #configure window
     wm title . "HAL Utility"
 
     listbox .lb -width 50 -yscrollcommand ".yscroll set" 
@@ -197,142 +342,6 @@ proc showWindow {games} {
     grid .currentName -sticky news -padx 1 -pady 1
     grid .lb1 .yscroll1 .coverCanvas1 -sticky news
 
-    bind . <Destroy> closeWindow
-
     refreshMainWindow $games
 
-}
-
-proc showSubWindow { game index } {
-    global name
-    global currentEditableGame
-    global currentEditableName
-
-    set currentEditableGame $game
-
-    set name [dict get $game name]
-    set currentEditableName $name
-
-    set preliminary [networkGetPreliminaryByName $name]
-    set preliminary [linsert $preliminary 0 $game]
-    toplevel .subwindow0
-
-    entry .subwindow0.currentName -textvariable name 
-    bind .subwindow0.currentName <Return> {recallNetworkDB $name $currentEditableGame}
-
-    listbox .subwindow0.lb1 -width 50
-    canvas .subwindow0.coverCanvas1
-    button .subwindow0.saveButton -text "Save"
-    #button .subwindow0.lastBackground -text "<< Background" -command "changeBackground"
-    #button .subwindow0.nextBackground -text ">>" -command "changeBackground"
-    bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
-
-    grid .subwindow0.currentName
-    grid .subwindow0.lb1 .subwindow0.coverCanvas1 -sticky ews
-    grid .subwindow0.saveButton
-
-    foreach x $preliminary {
-        .subwindow0.lb1 insert end [dict get $x name]
-    }
-
-    proc SubListSelectionChanged {listbox name preliminary} {
-        global currentEditableName
-
-        .subwindow0.coverCanvas1 delete cover
-        .subwindow0.coverCanvas1 delete screenshots
-        set index [$listbox curselection]
-        set game [lindex $preliminary $index]
-        puts "$index $game"
-
-        proc uploadImageHandler {filename imageIndex canvas tag} {
-            set idx [.subwindow0.lb1 curselection]
-            if {$idx ne $imageIndex} {
-                return
-            }
-            set img [image create photo -file $filename]
-            set scaleX [getScale $img $canvas]
-            if {$scaleX ne 0} {
-                scaleImage $img $scaleX
-            }
-            $canvas create image 0 0 -anchor nw -image $img -tags $tag
-        }
-
-        if {[dict exists $game cover] ne 0} {
-            if {[dict exists [dict get $game cover] url] ne 0} {
-                set coverURL [dict get [dict get $game cover] url]
-                if {$coverURL ne ""} {
-                    set coverFilename cache_img/[URLToFilename $coverURL]
-                    if {[file exists $coverFilename]} {
-                        set img [image create photo -file $coverFilename]
-                        set scaleX [getScale $img .subwindow0.coverCanvas1]
-                        if {$scaleX ne 0} {
-                            scaleImage $img $scaleX
-                        }
-                    } else {
-                        uploadImage $coverFilename $coverURL "cover_big" $index .subwindow0.coverCanvas1 cover uploadImageHandler
-                    }
-                }
-            }
-        }
-
-#        if {[dict exists $game screenshots] ne 0} {
-#            set screenshots [dict get $game screenshots]
-#            foreach URL $screenshots {
-#                set realURL [dict get $URL url]
-#                if {$realURL ne ""} {
-#                    set filename cache_img/[URLToFilename $realURL]
-#                    if {[file exists $filename]} {
-#                        set simg [image create photo -file $filename]
-#                        set scaleX [getScale $simg .subwindow0.coverCanvas1]
-#                        if {$scaleX ne 0} {
-#                            scaleImage $simg $scaleX
-#                        }
-#                    } else {
-#                        uploadImage $filename $realURL "720p" $index .subwindow0.coverCanvas1 screenshots uploadImageHandler
-#                    }
-#                }
-#            }
-#        }
-
-        #if {[info exists simg]} {
-        #    .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $simg -tags screenshots
-        #}
-
-        if {[info exists img]} {
-            .subwindow0.coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
-        }
-
-        .subwindow0.saveButton configure -command "savePreliminary {$currentEditableName} {$game}"
-    }
-
-    proc savePreliminary {name game} {
-        backup::saveToXMLByName $name $game
-        refreshMainWindow [backup::readXML]
-        destroy .subwindow0
-    }
-
-    proc changeBackground {} {
-    }
-
-    proc recallNetworkDB {name game} {
-        .subwindow0.lb1 delete 0 [expr [.subwindow0.lb1 size] - 1]
-
-        set preliminary [networkGetPreliminaryByName $name]
-        set preliminary [linsert $preliminary 0 $game]
-        foreach x $preliminary {
-            .subwindow0.lb1 insert end [dict get $x name]
-        }
-        bind .subwindow0.lb1 <<ListboxSelect>> [list SubListSelectionChanged %W $name $preliminary]
-    }
-
-}
-
-proc getScale {simg cover} {
-    set ih [image height $simg]
-    set iw [image width $simg]
-    set cw [winfo width $cover]
-    set ch [winfo height $cover]
-    set scaleY [expr double($ch) / $ih]
-    set scaleX [expr double($cw) / $iw]
-    return $scaleX
 }
