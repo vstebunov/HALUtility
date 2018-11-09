@@ -1,6 +1,10 @@
 # HALUtility
 
-## version 0.9.0.1
+version 0.9.0.1
+
+!(img)[https://raw.githubusercontent.com/vstebunov/HALUtility/master/imgs/screenshot.png]
+
+Edit your HAL backup file and upload game images from IGDB.
 
 ### Пролог
 
