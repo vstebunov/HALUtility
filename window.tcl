@@ -1,5 +1,6 @@
 package require Tk
 package require Img
+#package require Thread
 
 # Internal: Check a game list not contain empty space and start with zero
 #
@@ -109,21 +110,23 @@ proc showWindow {games} {
     #           show it on preliminary list listbox
     #           set handler for listbox
     #
-    # listbox - listbox element that handle
     # games - Dictionary with games on store
     #
     # Examples
-    #   listSelectionChanged .lb $games
+    #   listSelectionChanged $games
     #   #make all from section
     # 
     # Returns nothing
-    proc listSelectionChanged {listbox games} {
+    proc listSelectionChanged {games} {
         global name 
 
-        set index [$listbox curselection]
+        set index [.lb curselection]
         if {![dict exists $games $index]} {
             return
         }
+
+        .lb1 delete 0 [.lb1 size]
+
         if {[dict exists $games $index background] eq 1} {
             set backgroundFilename [dict get $games $index background]
             drawBackground $backgroundFilename
@@ -139,15 +142,13 @@ proc showWindow {games} {
 
         set name [dict get $games $index name]
 
-        .lb1 delete 0 [.lb1 size]
-
         set preliminary [networkGetPreliminaryByName $name]
 
         foreach x $preliminary {
             .lb1 insert end [dict get $x name]
         }
 
-        bind .lb1 <<ListboxSelect>> [list subListSelectionChanged %W $name $preliminary]
+        bind .lb1 <<ListboxSelect>> [list subListSelectionChanged $name $preliminary]
 
     }
 
@@ -227,7 +228,7 @@ proc showWindow {games} {
                 .lb insert end $name
             }
         }
-        bind .lb <<ListboxSelect>> [list listSelectionChanged %W $games]
+        bind .lb <<ListboxSelect>> [list listSelectionChanged $games]
     }
 
     # Internal: save a preliminary item to a main XML
@@ -274,16 +275,15 @@ proc showWindow {games} {
     #           upload cover
     #           set handler for save button
     #
-    # listbox - listbox element that handle
     # name - Current name of game in Dictionary
     # preliminary - uploaded from network Dictionary of preliminary games
     #
     # Examples
-    #   subListSelectionChanged .lb1 "testris" {name "testris" cover "xxx.jpg"}
+    #   subListSelectionChanged "testris" {name "testris" cover "xxx.jpg"}
     #   #make all from section
     # 
     # Returns nothing
-    proc subListSelectionChanged {listbox name preliminary} {
+    proc subListSelectionChanged {name preliminary} {
         global currentEditableName
 
         .coverCanvas1 delete cover
@@ -291,7 +291,7 @@ proc showWindow {games} {
 
         .coverCanvas1 configure -background yellow
 
-        set index [$listbox curselection]
+        set index [.lb1 curselection]
         set game [lindex $preliminary $index]
         puts "$index $game"
 
