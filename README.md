@@ -76,3 +76,4 @@ They could now:
 + Show loaded list on one window (without editing)
 + Save on one window
 + Show indication of loading
++ Cache list and load by threads

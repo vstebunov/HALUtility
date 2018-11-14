@@ -59,7 +59,7 @@ proc networkGetPreliminaryByName { name } {
 
     set urlSearchByName "http://api-endpoint.igdb.com/games/?search=$name&fields=id,name,cover,screenshots&limit=50"
 
-    puts $urlSearchByName
+    #puts $urlSearchByName
 
     set token [http::geturl $urlSearchByName -headers "user-key $userkey" ]
     set resp [http::data $token]

@@ -1,6 +1,6 @@
 package require Tk
 package require Img
-#package require Thread
+package require Thread
 
 # Internal: Check a game list not contain empty space and start with zero
 #
@@ -91,6 +91,35 @@ proc URLToFilename { URL } {
     return $coverFilename
 }
 
+set jobList {}
+
+set threadPool [ tpool::create -initcmd {
+
+    source netgamesdb.tcl
+
+    set jobCache {}
+
+    # Internal: download and cache preliminary and call when all prepare
+    #
+    # mainThread - thread with window and callback
+    # name - name of game to download
+    #
+    # Examples
+    #   downloadPreliminary $windowThread "tetris"
+    #
+    # Returns nothing
+    proc downloadPreliminary {mainThread name} {
+        global jobCache
+        if {[dict exists $jobCache $name]} {
+            set preliminary [dict get $jobCache $name]
+        } else {
+            set preliminary [networkGetPreliminaryByName $name]
+            dict set jobCache $name $preliminary
+        }
+        thread::send $mainThread [subst {::fillPreliminaryList [list $preliminary $name]}]
+    }
+}]
+
 # Internal: show main window
 #
 # games - Dictionary with games from network
@@ -102,22 +131,22 @@ proc URLToFilename { URL } {
 # Returns nothing
 proc showWindow {games} {
 
+
     # Internal: handle selection of game in main list
     #           show background
     #           show cover
-    #           set handler for edit button
-    #           upload preliminary list from internet
-    #           show it on preliminary list listbox
-    #           set handler for listbox
+    #           start show it on preliminary list listbox
     #
     # games - Dictionary with games on store
+    # threadPool - list with the thread poll that download games
+    # jobList - list of current job for download
     #
     # Examples
-    #   listSelectionChanged $games
-    #   #make all from section
+    #   listSelectionChanged $games 
+    #   # => put download in queue
     # 
     # Returns nothing
-    proc listSelectionChanged {games} {
+    proc listSelectionChanged {games threadPool jobList} {
         global name 
 
         set index [.lb curselection]
@@ -126,6 +155,7 @@ proc showWindow {games} {
         }
 
         .lb1 delete 0 [.lb1 size]
+        .lb1 configure -state disabled
 
         if {[dict exists $games $index background] eq 1} {
             set backgroundFilename [dict get $games $index background]
@@ -142,15 +172,45 @@ proc showWindow {games} {
 
         set name [dict get $games $index name]
 
-        set preliminary [networkGetPreliminaryByName $name]
+        set mainThreadID [thread::id]
 
-        foreach x $preliminary {
-            .lb1 insert end [dict get $x name]
-        }
+        tpool::cancel $threadPool $jobList
 
-        bind .lb1 <<ListboxSelect>> [list subListSelectionChanged $name $preliminary]
+        set jobWithNetwork [tpool::post $threadPool [list downloadPreliminary $mainThreadID $name]]
+
+        lappend jobList $jobWithNetwork
 
     }
+
+    # Internal: fill list after download 
+    #           set handler for edit button
+    #
+    # preliminary - Dictionary with games
+    # uploadedName - game of name in main list
+    #
+    # Examples
+    #   fillPreliminaryList {name "tetris"} "tetris"
+    #   # => fill listbox if selected name in list equal uploadedName
+    #
+    # Returns nothing
+    proc fillPreliminaryList {preliminary uploadedName} {
+        global name
+
+        #puts "fillPreliminaryList $preliminary $uploadedName $name"
+
+        if {$uploadedName ne $name} {
+            return
+        }
+
+        .lb1 configure -state normal
+        foreach entry $preliminary {
+            .lb1 insert end [dict get $entry name]
+        }
+
+
+        bind .lb1 <<ListboxSelect>> [list subListSelectionChanged $name $preliminary]
+    }
+
 
     # Internal: load image from net|cache and draw it on main cover canvas
     #
@@ -215,6 +275,8 @@ proc showWindow {games} {
     # Internal: refresh main list by new Dictionary with games
     #
     # games - Dictionary with games
+    # threadPool - thread pool for downloading
+    # jobList - list of downloading jobs
     #
     # Examples
     #   refreshMainWindow { id 0 game "Tetris" }
@@ -222,13 +284,16 @@ proc showWindow {games} {
     #
     # Returns nothing
     proc refreshMainWindow {games} {
+        global threadPool
+        global jobList
+
         .lb delete 0 [.lb size]
         dict for {id game} $games {
             dict with game {
                 .lb insert end $name
             }
         }
-        bind .lb <<ListboxSelect>> [list listSelectionChanged $games]
+        bind .lb <<ListboxSelect>> [list listSelectionChanged $games $threadPool $jobList]
     }
 
     # Internal: save a preliminary item to a main XML
@@ -284,7 +349,6 @@ proc showWindow {games} {
     # 
     # Returns nothing
     proc subListSelectionChanged {name preliminary} {
-        global currentEditableName
 
         .coverCanvas1 delete cover
         .coverCanvas1 delete screenshots
@@ -342,6 +406,5 @@ proc showWindow {games} {
     grid .currentName -sticky news -padx 1 -pady 1
     grid .lb1 .yscroll1 .coverCanvas1 -sticky news
 
-    refreshMainWindow $games
-
+    refreshMainWindow $games 
 }
