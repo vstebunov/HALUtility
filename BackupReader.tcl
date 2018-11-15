@@ -17,16 +17,20 @@ namespace eval backup {
         set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
 
         set i 0
-        foreach test [$root selectNode $xpath2] {
+        foreach appItem [$root selectNode $xpath2] {
             dict set xmlGames $i id $i
-            dict set xmlGames $i name [[$test selectNodes {title/text()}] nodeValue]
+            dict set xmlGames $i name [[$appItem selectNodes {title/text()}] nodeValue]
             dict set xmlGames $i uploaded 1
-            if {[$test selectNodes {bgImageUrl/text()}] ne ""} {
-                dict set xmlGames $i background [[$test selectNodes {bgImageUrl/text()}] nodeValue]
+            if {[$appItem selectNodes {bgImageUrl/text()}] ne ""} {
+                dict set xmlGames $i background [[$appItem selectNodes {bgImageUrl/text()}] nodeValue]
             }
-            if {[$test selectNodes {cardImageUrl/text()}] ne ""} {
-                dict set xmlGames $i cover [[$test selectNodes {cardImageUrl/text()}] nodeValue]
+            if {[$appItem selectNodes {cardImageUrl/text()}] ne ""} {
+                dict set xmlGames $i cover [[$appItem selectNodes {cardImageUrl/text()}] nodeValue]
             }
+            if {[$appItem selectNodes {intentInfo/data/text()}] ne ""} {
+                dict set xmlGames $i filePath [[$appItem selectNodes {intentInfo/data/text()}] nodeValue]
+            }
+
             incr i
         }
 
@@ -54,6 +58,7 @@ namespace eval backup {
         set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
 
         foreach test [$root selectNode $xpath2] {
+            puts $test
             foreach node [$test selectNodes title/text()[format {[contains(., "%s")]} $name]] {
                 #Set
                 $node nodeValue [dict get $game name]
@@ -97,6 +102,19 @@ namespace eval backup {
             } 
         }
         return false
+    }
+
+    # Internal: find node in XML and paste new nodes after it
+    #
+    # src - source game 
+    # clones - games for paste
+    #
+    # Examples
+    #   cloneFromIt { name "tetris" } { { name "xxx" } { name "yyy" } }
+    #
+    # Returns nothing
+    proc cloneFromIt {src output} {
+        return true
     }
 
 }

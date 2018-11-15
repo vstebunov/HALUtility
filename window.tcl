@@ -167,8 +167,14 @@ proc showWindow {games} {
             set coverFilename [dict get $games $index cover]
             drawCover $coverFilename
         }
+
         set game [dict get $games $index]
-        .editButton configure -command "showSubWindow {$game} $index"
+        if {[dict exists $game filePath] ne 0} {
+            .cloneButton configure -command "cloneGame {$game}"
+            .cloneButton configure -state normal
+        } else {
+            .cloneButton configure -state disable
+        }
 
         set name [dict get $games $index name]
 
@@ -205,6 +211,9 @@ proc showWindow {games} {
         .lb1 configure -state normal
         foreach entry $preliminary {
             .lb1 insert end [dict get $entry name]
+            if {[dict exists $entry cover] eq 0} {
+                .lb1 itemconfigure [expr {[.lb1 size] - 1}] -background lightgray
+            }
         }
 
 
@@ -287,6 +296,7 @@ proc showWindow {games} {
         global threadPool
         global jobList
 
+        .cloneButton configure -state disabled
         .lb delete 0 [.lb size]
         dict for {id game} $games {
             dict with game {
@@ -386,6 +396,39 @@ proc showWindow {games} {
         .saveButton configure -command "savePreliminary {$name} {$game}"
     }
 
+    # Internal get files from directory with current game and clone xml and save
+    # it
+    #
+    # game - source game for clone
+    #
+    # Examples
+    #   cloneGame { name "tetris" }
+    #   # -> start clone process
+    #
+    # Returns nothing
+    proc cloneGame {game} {
+        puts [dict get $game filePath]
+        set filePath [dict get $game filePath]
+        set dirname [tk_chooseDirectory -initialdir ~ -mustexist 1 -title "Where is file?"] 
+        if {$dirname eq ""} {
+            return
+        }
+        set filename [URLToFilename $filePath]
+        #set filename [string map [list "\[" "\[\[\]" "]" "\[\]\]" ] $filename]
+        puts $dirname
+        puts $filename
+        puts [glob -directory "C:/Users/Vladimir_Stebunov@epam.com/Downloads/win64/testme" "Contra*"]
+        set fileCount [glob -nocomplain -directory $dirname $filename]
+        puts $fileCount
+        if {$fileCount eq ""} {
+            tk_messageBox -message "File not found! Please set directory with current file $filename" -icon warning -type ok
+            return
+        }
+        set files [glob -directory $dirname]
+        puts $files
+
+    }
+
     assertGamesIdOrderedAndWithoutEmptySpace $games
 
     wm title . "HAL Utility"
@@ -393,7 +436,7 @@ proc showWindow {games} {
     listbox .lb -width 50 -yscrollcommand ".yscroll set" 
     scrollbar .yscroll -command ".lb yview" 
     canvas .coverCanvas
-    button .editButton -text "Edit" 
+    button .cloneButton -text "Clone by directory"
     entry .currentName -textvariable name 
 
     listbox .lb1 -width 50 -yscrollcommand ".yscroll1 set"
@@ -402,7 +445,7 @@ proc showWindow {games} {
     button .saveButton -text "Save"
 
     grid .lb .yscroll .coverCanvas -sticky news -padx 1 -pady 1
-    grid .editButton  - .saveButton  -sticky news -padx 1 -pady 1
+    grid .saveButton - .cloneButton -sticky news -padx 1 -pady 1
     grid .currentName -sticky news -padx 1 -pady 1
     grid .lb1 .yscroll1 .coverCanvas1 -sticky news
 

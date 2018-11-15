@@ -77,3 +77,5 @@ They could now:
 + Save on one window
 + Show indication of loading
 + Cache list and load by threads
++ Show preliminary without images by grey indication
++ Add button clone game
