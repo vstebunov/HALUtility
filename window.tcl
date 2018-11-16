@@ -82,7 +82,7 @@ proc getScale {simg cover} {
 #
 # Returns filename
 proc URLToFilename { URL } {
-    set pattern {[^\/]*\.[a-z]{3,4}$}
+    set pattern {[^\/]*\.[a-z0-9]{3,4}$}
     regexp $pattern $URL coverFilename
     if {[info exists coverFilename] eq 0} {
         puts "pattern wrong! $URL"
@@ -168,9 +168,10 @@ proc showWindow {games} {
             drawCover $coverFilename
         }
 
+        .cloneButton configure -command ""
         set game [dict get $games $index]
         if {[dict exists $game filePath] ne 0} {
-            .cloneButton configure -command "cloneGame {$game}"
+            .cloneButton configure -command "cloneGame {$game} {$games}"
             .cloneButton configure -state normal
         } else {
             .cloneButton configure -state disable
@@ -406,26 +407,33 @@ proc showWindow {games} {
     #   # -> start clone process
     #
     # Returns nothing
-    proc cloneGame {game} {
-        puts [dict get $game filePath]
+    proc cloneGame {game games} {
         set filePath [dict get $game filePath]
         set dirname [tk_chooseDirectory -initialdir ~ -mustexist 1 -title "Where is file?"] 
         if {$dirname eq ""} {
             return
         }
         set filename [URLToFilename $filePath]
-        #set filename [string map [list "\[" "\[\[\]" "]" "\[\]\]" ] $filename]
-        puts $dirname
-        puts $filename
-        puts [glob -directory "C:/Users/Vladimir_Stebunov@epam.com/Downloads/win64/testme" "Contra*"]
-        set fileCount [glob -nocomplain -directory $dirname $filename]
-        puts $fileCount
-        if {$fileCount eq ""} {
+        set files [glob -tails -directory $dirname *]
+        set filePosition [lsearch -exact $files $filename]
+        if {$filePosition eq -1} {
             tk_messageBox -message "File not found! Please set directory with current file $filename" -icon warning -type ok
             return
         }
-        set files [glob -directory $dirname]
-        puts $files
+
+        dict for {id gm} $games {
+            if {[dict exists $gm filePath]} {
+                set existedFile [URLToFilename [dict get $gm filePath]]
+                set filePosition [lsearch -exact $files $existedFile]
+                if {$filePosition ne -1} {
+                    set files [lreplace $files $filePosition 1]
+                }
+            }
+        }
+
+        backup::cloneFromIt $game $files
+
+        refreshMainWindow [backup::readXML]
 
     }
 

@@ -107,14 +107,58 @@ namespace eval backup {
     # Internal: find node in XML and paste new nodes after it
     #
     # src - source game 
-    # clones - games for paste
+    # newcomers - games for paste
     #
     # Examples
     #   cloneFromIt { name "tetris" } { { name "xxx" } { name "yyy" } }
     #
     # Returns nothing
-    proc cloneFromIt {src output} {
-        return true
+    proc cloneFromIt {src newcomers} {
+        puts $src
+        puts $newcomers
+
+        set filename "Backup_HAL/_serialized_AppList.dat.xml"
+        #Read
+        set f [open $filename]
+        set doc [dom parse [read $f]]
+        close $f
+
+        set root [$doc documentElement]
+        set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
+
+        set filePath [dict get $src filePath]
+        puts $filePath
+
+        set filename [URLToFilename $filePath]
+
+        foreach test [$root selectNode $xpath2] {
+            foreach node [$test selectNodes intentInfo/data/text()[format {[contains(., "%s")]} $filePath]] {
+                set srcNode [[[$node parentNode] parentNode] parentNode]
+
+                list newNode []
+
+                foreach n $newcomers {
+                    set renameMap "{$filename} {$n}"
+                    set newPath [string map $renameMap $filePath]
+
+                    set renameName {[dict get $src name] "$n"}
+                    set renamePath "{$filePath} {$newPath}"
+
+                    lappend newNode [string map [list $renamePath $renameName] [$srcNode asXML]]
+                }
+                puts $newNode
+
+                $srcNode appendXML $newNode
+
+                break
+            }
+        }
+
+        #Save
+        #set changed [$doc asXML]
+        #set fileId [open $filename "w"]
+        #puts -nonewline $fileId $changed
+        #close $fileId
     }
 
 }
