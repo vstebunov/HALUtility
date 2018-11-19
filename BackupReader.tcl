@@ -58,7 +58,6 @@ namespace eval backup {
         set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
 
         foreach test [$root selectNode $xpath2] {
-            puts $test
             foreach node [$test selectNodes title/text()[format {[contains(., "%s")]} $name]] {
                 #Set
                 $node nodeValue [dict get $game name]
@@ -114,12 +113,9 @@ namespace eval backup {
     #
     # Returns nothing
     proc cloneFromIt {src newcomers} {
-        puts $src
-        puts $newcomers
-
-        set filename "Backup_HAL/_serialized_AppList.dat.xml"
+        set XMLfilename "Backup_HAL/_serialized_AppList.dat.xml"
         #Read
-        set f [open $filename]
+        set f [open $XMLfilename]
         set doc [dom parse [read $f]]
         close $f
 
@@ -127,38 +123,33 @@ namespace eval backup {
         set xpath2 {//net.i.akihiro.halauncher.data.AppItem}
 
         set filePath [dict get $src filePath]
-        puts $filePath
 
         set filename [URLToFilename $filePath]
 
         foreach test [$root selectNode $xpath2] {
             foreach node [$test selectNodes intentInfo/data/text()[format {[contains(., "%s")]} $filePath]] {
                 set srcNode [[[$node parentNode] parentNode] parentNode]
-
-                list newNode []
+                set prntNode [$srcNode parentNode]
 
                 foreach n $newcomers {
                     set renameMap "{$filename} {$n}"
                     set newPath [string map $renameMap $filePath]
 
-                    set renameName {[dict get $src name] "$n"}
+                    set renameName "{[dict get $src name]} {$n}"
                     set renamePath "{$filePath} {$newPath}"
 
-                    lappend newNode [string map [list $renamePath $renameName] [$srcNode asXML]]
+                    $prntNode appendXML [string map "$renamePath $renameName" [$srcNode asXML]]
                 }
-                puts $newNode
-
-                $srcNode appendXML $newNode
 
                 break
             }
         }
 
         #Save
-        #set changed [$doc asXML]
-        #set fileId [open $filename "w"]
-        #puts -nonewline $fileId $changed
-        #close $fileId
+        set changed [$doc asXML]
+        set fileId [open $XMLfilename w]
+        puts -nonewline $fileId $changed
+        close $fileId
     }
 
 }

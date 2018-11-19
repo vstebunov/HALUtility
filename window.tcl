@@ -203,8 +203,6 @@ proc showWindow {games} {
     proc fillPreliminaryList {preliminary uploadedName} {
         global name
 
-        #puts "fillPreliminaryList $preliminary $uploadedName $name"
-
         if {$uploadedName ne $name} {
             return
         }
@@ -368,7 +366,6 @@ proc showWindow {games} {
 
         set index [.lb1 curselection]
         set game [lindex $preliminary $index]
-        puts "$index $game"
 
         if {[dict exists $game cover] ne 0} {
             if {[dict exists [dict get $game cover] url] ne 0} {

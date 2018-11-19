@@ -80,3 +80,4 @@ They could now:
 + Show preliminary without images by grey indication
 + Add button clone game
 + Start clone in XML
++ Clone game by example that contains in selected directory
