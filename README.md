@@ -16,7 +16,7 @@ After
 
 ## Download and Run
 
-[Download](https://github.com/vstebunov/HALUtility/releases/download/v.0.1.1/halutility_x64.exe)
+[Download](https://github.com/vstebunov/HALUtility/releases/download/0.9.0.2/halutility_x64.exe)
 
 ## Usage
 
