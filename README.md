@@ -54,36 +54,22 @@ After
 
 ![screen](https://raw.githubusercontent.com/vstebunov/HALUtility/master/imgs/save-restore-screen.png)
 
++ That's all
+
 ## Contributing
 
 Pull requests are welcome.
 
+For develop you are need additional library:
+
+* Threads
+* Img
+* tdom
+
+On linux you need to install it by apt-get
+
+On windows you need to download Img and tdom and use FreeWrap
+
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
-
-### Пролог
-
-Мне надоело править через свою приставку HALauncher и для этого я написал
-скрипт который позволяет загружать из сети с сайта IGDB.com обложки и скриншоты
-и полные названия для игр и подставлять их вместо имеющихся.
-
-### Как скомпилировать
-
-Я компилировал для двух платформ Windows 7 и Debian. 
-
-#### Windows 7
-
-Я воспользовался пакетом freewrap и дополнительными библиотеками Img-win64 и
-tdom их нужно скачать и положить в ту же папку что и сама программа.
-
-#### Debian
-
-Нужно дополнительно установить библиотеки через консоль и запустить через tclsh
-
-### Как работать
-
-1. Сделать в HALauncher бэкап текущего состояния
-2. Скопировать его в папку со скриптом
-3. Запустить скрипт и выбрать редактируемую иконку
-4. Нажать кнопку save после того как выбраны новые иконки
-5. Скопировать папку обратно на старое место
