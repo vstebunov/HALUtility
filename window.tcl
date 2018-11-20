@@ -103,12 +103,13 @@ set threadPool [ tpool::create -initcmd {
     #
     # mainThread - thread with window and callback
     # name - name of game to download
+    # ignoreName - fill ignores current name in main list
     #
     # Examples
     #   downloadPreliminary $windowThread "tetris"
     #
     # Returns nothing
-    proc downloadPreliminary {mainThread name} {
+    proc downloadPreliminary {mainThread name ignoreName} {
         global jobCache
         if {[dict exists $jobCache $name]} {
             set preliminary [dict get $jobCache $name]
@@ -116,9 +117,13 @@ set threadPool [ tpool::create -initcmd {
             set preliminary [networkGetPreliminaryByName $name]
             dict set jobCache $name $preliminary
         }
-        thread::send $mainThread [subst {::fillPreliminaryList [list $preliminary $name]}]
+        thread::send $mainThread [subst {::fillPreliminaryList [list $preliminary $name $ignoreName]}]
     }
 }]
+
+set gamesListSelection 0
+
+set searchName ""
 
 # Internal: show main window
 #
@@ -131,6 +136,7 @@ set threadPool [ tpool::create -initcmd {
 # Returns nothing
 proc showWindow {games} {
 
+    global searchName
 
     # Internal: handle selection of game in main list
     #           show background
@@ -148,8 +154,11 @@ proc showWindow {games} {
     # Returns nothing
     proc listSelectionChanged {games threadPool jobList} {
         global name 
+        global gamesListSelection
+        global searchName
 
         set index [.lb curselection]
+        set gamesListSelection $index
         if {![dict exists $games $index]} {
             return
         }
@@ -178,15 +187,33 @@ proc showWindow {games} {
         }
 
         set name [dict get $games $index name]
+        set searchName $name
 
         set mainThreadID [thread::id]
-
         tpool::cancel $threadPool $jobList
-
-        set jobWithNetwork [tpool::post $threadPool [list downloadPreliminary $mainThreadID $name]]
-
+        set jobWithNetwork [tpool::post $threadPool [list downloadPreliminary $mainThreadID $name 0]]
         lappend jobList $jobWithNetwork
 
+    }
+
+    # Internal: fill preliminary list by name in input field
+    #
+    # Examples
+    #   searchByName()
+    #   # => filled by input and name
+    #
+    # Returns nothing
+    proc searchByName {} {
+        global threadPool
+        global jobList
+        global searchName
+
+        .lb1 delete 0 [.lb1 size]
+        .lb1 configure -state disabled
+        set mainThreadID [thread::id]
+        tpool::cancel $threadPool $jobList
+        set jobWithNetwork [tpool::post $threadPool [list downloadPreliminary $mainThreadID $searchName 1]]
+        lappend jobList $jobWithNetwork
     }
 
     # Internal: fill list after download 
@@ -194,16 +221,20 @@ proc showWindow {games} {
     #
     # preliminary - Dictionary with games
     # uploadedName - game of name in main list
+    # ignoreName - ignore name and set it in list
     #
     # Examples
     #   fillPreliminaryList {name "tetris"} "tetris"
     #   # => fill listbox if selected name in list equal uploadedName
+    #   fillPreliminaryList {name "tetris"} "tetri4" 1
+    #   # => fill listbox  
     #
     # Returns nothing
-    proc fillPreliminaryList {preliminary uploadedName} {
+    proc fillPreliminaryList {preliminary uploadedName ignoreName} {
         global name
 
-        if {$uploadedName ne $name} {
+        if {$ignoreName ne 1 && $uploadedName ne $name} {
+            bind .lb1 <<ListboxSelect>> ""
             return
         }
 
@@ -215,8 +246,10 @@ proc showWindow {games} {
             }
         }
 
-
         bind .lb1 <<ListboxSelect>> [list subListSelectionChanged $name $preliminary]
+
+        .lb1 selection set 0
+        subListSelectionChanged $name $preliminary
     }
 
 
@@ -283,8 +316,6 @@ proc showWindow {games} {
     # Internal: refresh main list by new Dictionary with games
     #
     # games - Dictionary with games
-    # threadPool - thread pool for downloading
-    # jobList - list of downloading jobs
     #
     # Examples
     #   refreshMainWindow { id 0 game "Tetris" }
@@ -294,6 +325,7 @@ proc showWindow {games} {
     proc refreshMainWindow {games} {
         global threadPool
         global jobList
+        global gamesListSelection
 
         .cloneButton configure -state disabled
         .lb delete 0 [.lb size]
@@ -303,6 +335,8 @@ proc showWindow {games} {
             }
         }
         bind .lb <<ListboxSelect>> [list listSelectionChanged $games $threadPool $jobList]
+        .lb selection set $gamesListSelection
+        listSelectionChanged $games $threadPool $jobList
     }
 
     # Internal: save a preliminary item to a main XML
@@ -338,6 +372,7 @@ proc showWindow {games} {
         }
         set img [image create photo -file $filename]
         set scaleX [getScale $img $canvas]
+        set scaleX [expr $scaleX * 0.3]
         if {$scaleX ne 0} {
             scaleImage $img $scaleX
         }
@@ -375,20 +410,20 @@ proc showWindow {games} {
                     if {[file exists $coverFilename]} {
                         set img [image create photo -file $coverFilename]
                         set scaleX [getScale $img .coverCanvas1]
+                        set scaleX [expr $scaleX * 0.3]
                         if {$scaleX ne 0} {
                             scaleImage $img $scaleX
                         }
+
+                        .coverCanvas1 configure -background gray
+                        .coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
+
                     } else {
                         .coverCanvas1 configure -background green
                         uploadImage $coverFilename $coverURL "cover_big" $index .coverCanvas1 cover uploadImageHandler
                     }
                 }
             }
-        }
-
-        if {[info exists img]} {
-            .coverCanvas1 configure -background gray
-            .coverCanvas1 create image 0 0 -anchor nw -image $img -tags cover
         }
 
         .saveButton configure -command "savePreliminary {$name} {$game}"
@@ -437,12 +472,16 @@ proc showWindow {games} {
     assertGamesIdOrderedAndWithoutEmptySpace $games
 
     wm title . "HAL Utility"
+    wm resizable . 0 0
 
     listbox .lb -width 50 -yscrollcommand ".yscroll set" 
     scrollbar .yscroll -command ".lb yview" 
     canvas .coverCanvas
     button .cloneButton -text "Clone by directory"
-    entry .currentName -textvariable name 
+
+    entry .currentName -textvariable searchName 
+    button .search -text "Search"
+    .search configure -command "searchByName"
 
     listbox .lb1 -width 50 -yscrollcommand ".yscroll1 set"
     scrollbar .yscroll1 -command ".lb1 yview" 
@@ -451,7 +490,7 @@ proc showWindow {games} {
 
     grid .lb .yscroll .coverCanvas -sticky news -padx 1 -pady 1
     grid .saveButton - .cloneButton -sticky news -padx 1 -pady 1
-    grid .currentName -sticky news -padx 1 -pady 1
+    grid .currentName - .search -sticky news -padx 1 -pady 1
     grid .lb1 .yscroll1 .coverCanvas1 -sticky news
 
     refreshMainWindow $games 
