@@ -20,7 +20,7 @@ After
 
 ## Usage
 
-+ __Before start make backup of your backup of HALauncher!__
++ __Before start make backup of your BackupHAL directory!__
 
 + Make backup of your HALauncher 
 
@@ -60,7 +60,7 @@ After
 
 Pull requests are welcome.
 
-For develop you are need additional library:
+For developing you need additional library:
 
 * Threads
 * Img
